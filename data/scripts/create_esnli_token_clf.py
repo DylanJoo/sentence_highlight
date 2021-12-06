@@ -33,13 +33,13 @@ def keyword_extraction(srcA, srcB, tgtA, tgtB, highlightA=False):
         tokens_hl = list()
         labels = list()
         hl = 0
-        punc = lambda x: return (x in [",", ".", "?", "!"])
+        punc = (lambda x: x in [",", ".", "?", "!"]) # [CONCERN] for now, i only truncate ",.!?"
 
         for tok in nlp(sentence):
             if tok.text == "*":
                 hl = 0 if hl else 1
             else:
-                if tok.text in punc: # [CONCERN] for now, i only truncate the comma and period.
+                if punc(tok.text): 
                     tokens_hl += []
                     labels += [0]
                 else:

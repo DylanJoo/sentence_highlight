@@ -13,7 +13,7 @@ Packages requirments:
     - hugginface 
     - datasets 
 """
-import os
+import multiprocessing
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -36,10 +36,10 @@ from models import BertForHighlightPrediction
 class OurModelArguments:
 
     # Huggingface's original arguments
-    model_name_or_path: Optional[str] = field(default=None)
-    model_type: Optional[str] = field(default=None)
+    model_name_or_path: Optional[str] = field(default='bert-base-uncased')
+    model_type: Optional[str] = field(default='bert-base-uncased')
     config_name: Optional[str] = field(default=None)
-    tokenizer_name: Optional[str] = field(default=None)
+    tokenizer_name: Optional[str] = field(default='bert-base-uncased')
     cache_dir: Optional[str] = field(default=None)
     use_fast_tokenizer: bool = field(default=True)
     model_revision: str = field(default="main")
@@ -47,6 +47,8 @@ class OurModelArguments:
     # Cutomized arguments
     pooler_type: str = field(default="cls")
     temp: float = field(default=0.05)
+    num_labels: float = field(default=2)
+
 
 @dataclass
 class OurDataArguments:
@@ -58,18 +60,24 @@ class OurDataArguments:
     validation_split_percentage: Optional[int] = field(default=5)
     preprocessing_num_workers: Optional[int] = field(default=None)
     # Customized arguments
-    train_file: Optional[str] = field(
-            default="data/parsed/train/esnl_sents_highlight_contracdict.jsonl"
-    )
-    eval_file: Optional[str] = field(
-            default="data/parsed/dev/esnl_sents_highlight_contracdict.jsonl"
-    )
-    test_file: Optional[str] = field(
-            default="data/parsed/test/esnl_sents_highlight_contracdict.jsonl"
-    )
-    max_seq_length: Optional[int] = field(
-            default=512
-    )
+    train_file: Optional[str] = field(default="data/parsed/train/esnli_sents_highlight_contracdict.jsonl")
+    eval_file: Optional[str] = field(default="data/parsed/dev/esnli_sents_highlight_contracdict.jsonl")
+    test_file: Optional[str] = field(default="data/parsed/test/esnli_sents_highlight_contracdict.jsonl")
+    max_seq_length: Optional[int] = field(default=512)
+
+@dataclass
+class OurTrainingArguments(TrainingArguments):
+    output_dir: str = field(default='./models')
+    do_train: bool = field(default=False)
+    do_eval: bool = field(default=False)
+    save_steps: int = field(default=1000)
+    per_device_train_batch_size: int = field(default=16)
+    per_device_eval_batch_size: int = field(default=16)
+    weight_decay: float = field(default=0.0)
+    logging_dir: Optional[str] = field(default='./logs')
+    warmup_steps: int = field(default=1000)
+
+
 
 def main():
     """
@@ -88,7 +96,7 @@ def main():
     # [TODO] If the additional arguments are fixed for putting in the function,
     # make it consistent to the function calls.
     config_kwargs = {
-            "num_labels": model_args.num_labels
+            "num_labels": model_args.num_labels,
             "output_hidden_states": True
     }
     tokenizer_kwargs = {
@@ -96,12 +104,12 @@ def main():
             # "use_fast": model_args.use_fast_tokenizer
     }
     config = AutoConfig.from_pretrained(model_args.config_name, **config_kwargs)
-    tokenizer = AutoTokenizer.from_pretraine(model_args.tokenizer_name, **tokenizer_kwargs)
+    tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name, **tokenizer_kwargs)
 
 
     # model 
     model_kwargs = {
-            "cache_dir": model_args.cache_dir.
+            "cache_dir": model_args.cache_dir,
     }
     model = BertForHighlightPrediction.from_pretrained(
             model_args.model_name_or_path,
@@ -129,7 +137,7 @@ def main():
         size = len(examples['sentA'])
         features = tokenizer(
             examples['sentA'], examples['sentB'],
-            max_length=512, # [TODO] make it callable
+            max_length=data_args.max_seq_length, # [TODO] make it callable
             truncation=True,
             padding=True,
         )   
@@ -137,13 +145,13 @@ def main():
 
         for b in range(size):
             features['labels'][b] = merge_list(
-                word_labels=examples['word_labels'][b], 
+                word_labels=examples['labels'][b], 
                 word_id_list=features.word_ids(b)
             )
 
         return features
 
-    dataset = DatsetDict.from_json({
+    dataset = DatasetDict.from_json({
         "train": data_args.train_file,
         "dev": data_args.eval_file
     })
@@ -151,8 +159,8 @@ def main():
     dataset = dataset.map(
         function=preprare_esnli_seq_labeling,
         batched=True,
-        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'word_labels'],
-        num_proc=os.multiprocessing.cpu_count()
+        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
+        num_proc=multiprocessing.cpu_count()
     )
 
 
@@ -169,7 +177,7 @@ def main():
             model=model, 
             args=training_args,
             train_dataset=dataset['train'],
-            eval_dataset=dataset['eval'],
+            eval_dataset=dataset['dev'],
             data_collator=data_collator
     )
     trainer.model_args = model_args
