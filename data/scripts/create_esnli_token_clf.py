@@ -6,8 +6,6 @@ import argparse
 import collections
 from spacy.lang.en import English
 
-from transformers import AutoTokenizer
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-out", "--path_output", type=str)
 parser.add_argument("-sentA", "--path_sentenceA", type=str)
