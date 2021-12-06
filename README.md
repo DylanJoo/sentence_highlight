@@ -8,7 +8,7 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 > T5-marks-generation\
 > Bert-seq-labeling
 
-## Bert-seq-labeling
+## Bert-token-labeling
 - Highlight dataset
 > a) Download the files from 'OanaMariaCamburu/e-SNLI'\
 > b) Parsing the csv file into text file\
@@ -25,4 +25,9 @@ python3 train.py \
   --train_file "data/parsed/train/esnli_sents_highligh_contradict.jsonl" \
   --eval_file "data/parsed/dev/esnli_sents_highligh_contradict.jsonl"
 ```
+- Evaluation
+
+## T5-marks-generation
+- Highlight dataset
+- Training
 - Evaluation
