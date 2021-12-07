@@ -3,6 +3,7 @@ import re
 import string
 import argparse
 import collections
+from utils import read_esnli
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-data_dir", "--path_data_dir", type=str)
@@ -34,7 +35,7 @@ def conditional_prefix(srcA, srcB, tgtA, tgtB, classes):
         return f"Sentence1: {srcA} Sentence2: {srcB} Contradiction:\t{tgtB}\n"
     elif classes == 'entailment':
         return f"Sentence1: {srcA} Sentence2: {srcB} Entailment:\t{tgtB}\n"
-    else classes == 'neutral':
+    else:
         return f"Sentence1: {srcA} Sentence2: {srcB} Neutral:\t{tgtB}\n"
 
 def convert_to_marks_generation(args):

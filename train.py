@@ -30,6 +30,7 @@ from transformers import (
 
 from datasets import load_dataset, DatasetDict
 from models import BertForHighlightPrediction
+from trainers import BertTrainer, T5Trainer
 
 # Arguments: (1) Model arguments (2) DataTraining arguments (3)
 @dataclass
@@ -180,10 +181,18 @@ def main():
             eval_dataset=dataset['dev'],
             data_collator=data_collator
     )
+    # trainer = BertTrainer(
+    #         model=model, 
+    #         args=training_args,
+    #         train_dataset=dataset['train'],
+    #         eval_dataset=dataset['dev'],
+    #         data_collator=data_collator
+    # )
     trainer.model_args = model_args
     
     # ***** strat training *****
-    trainer.train()
+    results = trainer.train(model_path=model_args.model_name_or_path)
+
 
 
     return results

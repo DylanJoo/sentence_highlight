@@ -12,6 +12,7 @@ parser.add_argument("-data_dir", "--path_data_dir", type=str)
 parser.add_argument("-output_path", "--path_output_file", type=str)
 parser.add_argument("-highlightB_only", "--labeling_on_sentB_only", action='store_true', default=False)
 parser.add_argument("-class", "--class_selected", type=str, default='contradiction')
+parser.add_argument("--reverse", action='store_true', default=False)
 args = parser.parse_args()
 
 nlp = English()

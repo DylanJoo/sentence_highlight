@@ -1,3 +1,4 @@
+import os
 import collections
 
 
@@ -10,14 +11,14 @@ def read_esnli(args):
     """ Function for reading the sentence A/B and highlight A/B with the corresponding labels """
 
     data = collections.OrderedDict()
-    data['sentA'] = readlines(os.path.join(args.data_dir, 'sentenceA.txt'))
-    data['sentB'] = readlines(os.path.join(args.data_dir, 'sentenceB.txt'))
-    data['highlightA'] = readlines(os.path.join(args.data_dir, 'highlightA.txt'))
-    data['highlightB'] = readlines(os.path.join(args.data_dir, 'highligthB.txt'))
-    data['label'] = readlines(os.path.join(args.data_dir, 'labels.txt'))
+    data['sentA'] = readlines(os.path.join(args.path_data_dir, 'sentenceA.txt'))
+    data['sentB'] = readlines(os.path.join(args.path_data_dir, 'sentenceB.txt'))
+    data['highlightA'] = readlines(os.path.join(args.path_data_dir, 'highlightA.txt'))
+    data['highlightB'] = readlines(os.path.join(args.path_data_dir, 'highlightB.txt'))
+    data['label'] = readlines(os.path.join(args.path_data_dir, 'label.txt'))
 
-    if os.path.exists(os.path.join(args.data_dir, 'explanation.txt')):
-        data['explanation'] = readlines(os.path.join(args.data_dir, 'explanation.txt'))
+    if os.path.exists(os.path.join(args.path_data_dir, 'explanation.txt')):
+        data['explanation'] = readlines(os.path.join(args.path_data_dir, 'explanation.txt'))
 
     # example filtering 
     if args.class_selected != 'all':
