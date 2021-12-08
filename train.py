@@ -37,9 +37,9 @@ from trainers import BertTrainer, T5Trainer
 class OurModelArguments:
 
     # Huggingface's original arguments
-    model_name_or_path: Optional[str] = field(default='bert-base-uncased')
+    model_name_or_path: Optional[str] = field(default='./models')
     model_type: Optional[str] = field(default='bert-base-uncased')
-    config_name: Optional[str] = field(default=None)
+    config_name: Optional[str] = field(default='bert-base-uncased')
     tokenizer_name: Optional[str] = field(default='bert-base-uncased')
     cache_dir: Optional[str] = field(default=None)
     use_fast_tokenizer: bool = field(default=True)
@@ -77,6 +77,7 @@ class OurTrainingArguments(TrainingArguments):
     weight_decay: float = field(default=0.0)
     logging_dir: Optional[str] = field(default='./logs')
     warmup_steps: int = field(default=1000)
+    resume_from_checkpiint: Optional[str] = field(default=None)
 
 
 
@@ -135,9 +136,10 @@ def main():
 
             return token_labels
 
-        size = len(examples['sentA'])
+        size = len(examples['wordsA'])
         features = tokenizer(
-            examples['sentA'], examples['sentB'],
+            examples['wordsA'], examples['wordsB'],
+            is_split_into_words=True, # allowed the pre-tokenization process, to match the seq-order
             max_length=data_args.max_seq_length, # [TODO] make it callable
             truncation=True,
             padding=True,
@@ -188,12 +190,19 @@ def main():
     #         eval_dataset=dataset['dev'],
     #         data_collator=data_collator
     # )
-    trainer.model_args = model_args
+    # trainer.model_args = model_args
     
     # ***** strat training *****
-    results = trainer.train(model_path=model_args.model_name_or_path)
+    model_path = None #[TODO] parsing the argument model_args.model_name_or_path 
+    results = trainer.train(model_path=model_path)
 
-
+    # ***** start inferencing/prediciton *****
+    # trainer.inference(
+    #         output_jsonl='bert-seq-labeling-dev.jsonl',
+    #         eval_dataset=None, # use the old one
+    #         prob_aggregate_strategy='first',
+    #         save_to_json=True
+    # )
 
     return results
 

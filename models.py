@@ -77,8 +77,7 @@ class BertForHighlightPrediction(BertPreTrainedModel):
 
         with torch.no_grad():
             outputs = self.forward(**inputs)
-            highlight_output = outputs.hidden_states
-            probabilities = self.softmax(self.tokens_clf(highlight_output))
+            probabilities = self.softmax(self.tokens_clf(outputs.hidden_states[-1]))
             predictions = torch.argmax(probabilities, dim=-1)
 
             # active filtering
@@ -88,7 +87,7 @@ class BertForHighlightPrediction(BertPreTrainedModel):
                 predictions,
                 torch.tensor(-1).type_as(predictions)
             )
-            return {"probabilities": probabilities[:, 1],
-                    "active_predictions": predictions,
+            return {"probabilities": probabilities[:, :, 1].detach().numpy(), # shape: (batch, length)
+                    "active_predictions": predictions.detach().numpy(),
                     "active_tokens": active_tokens}
 

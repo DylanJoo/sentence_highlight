@@ -57,6 +57,8 @@ def keyword_extraction(srcA, srcB, tgtA, tgtB, only_on_B=True):
 
     return {'sentA': ' '.join(tokens_A), 
             'sentB': ' '.join(tokens_B), 
+            'wordsA': tokens_A, 
+            'wordsB': tokens_B, 
             'keywordsA': tokens_A_hl, 
             'keywordsB': tokens_B_hl,
             'labels': labels_A + labels_B}

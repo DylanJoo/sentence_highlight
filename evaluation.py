@@ -5,15 +5,6 @@ from spacy.lang.en import English
 import json
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-truth", "--path_truth_file", type=str)
-parser.add_argument("-pred", "--path_pred_file", type=str)
-parser.add_argument("-hl_type", "--output_type", type=str)
-parser.add_argument("-eval_mode", "--evaluation_mode", type=str)
-args = parser.parse_args()
-
-nlp = English()
-
 # truth jsonl file
 def load_from_jsonl(file_path):
     truth = collections.OrderedDict()
@@ -31,17 +22,30 @@ def load_from_bert_lime(file_path, prob_threshold=0, topk=-1, topn=-1):
     """
     pass
 
-def load_from_bert_seq_labeling(file_path, prob_threshold=0.5):
+def load_from_bert_seq_labeling(file_path, prob_threshold=0, sentA=True):
     """
     File type: dictionary file, e.g. .json, .jsonl
     (1) Post-process the token-to-word labeling.
     """
-    pass
+    pred = collection.defaultdict(list)
+
+    with open(file_path, 'r') as f:
+        for i, line in enumerate(f):
+            data = json.loads(line)
+            sentB = None
+            # pred[i] = [(w, p) for (w, p) in zip(data['word'], data['prob']) if p >= prob_threshold]
+            for i, (w, p) in enumerate(zip(data['word'], data['prob'])):
+                if p == -1:
+                    sentB = sentA if i == 0 else True
+                elif p >= prob_threshold and sentB:
+                    pred[i].append([(w, p)])
+    return pred
+
 
 def load_from_bert_span_detection(file_path):
     pass
 
-def load_from_t5_mark_generation(file_path):
+def load_from_t5_mark_generation(file_path, show_negative=0):
     """
     File type: Raw text, e.g. .txt, .tsv
     """
@@ -54,24 +58,34 @@ def load_from_t5_mark_generation(file_path):
             for tok in nlp(line.strip()):
                 if tok.text == "*":
                     hl = 0 if hl else 1
+                elif show_negative:
+                    pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
                 else:
-                    if punc(tok.text):
-                        pass
-                    else:
-                        pred[i] += [tok.text] if hl else []
+                    pred[i] += [(tok.text, 1)] if hl else []
     return pred
 
 
 def main(args):
     truth = load_from_jsonl(args.path_truth_file)
     if args.output_type == 'bert_lime':
-        pred = load_from_bert_lime(args.path_pred_file)
+        pred = load_from_bert_lime(
+                args.path_pred_file
+        )
     elif args.output_type == 'bert_seq_labeling':
-        pred = load_from_bert_seq_labeling(args.path_pred_file)
+        pred = load_from_bert_seq_labeling(
+                args.path_pred_file,
+                prob_threshold=0, 
+                sentA=False
+        )
     elif args.output_type == 'bert_span_detection':
-        pred = load_from_bert_span_detection(args.path_pred_file)
+        pred = load_from_bert_span_detection(
+                args.path_pred_file
+        )
     elif args.output_type == 't5_marks_generation':
-        pred = load_from_t5_mark_generation(args.path_pred_file)
+        pred = load_from_t5_mark_generation(
+                args.path_pred_file,
+                show_negative=0
+        )
     else:
         print("Invalid type of highlight tasks")
         exit(0)
@@ -97,6 +111,14 @@ def main(args):
                                                        'f1-score', np.mean(metrics['f1']), len(truth))
 
 if __name__ == "__main__()":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-truth", "--path_truth_file", type=str)
+    parser.add_argument("-pred", "--path_pred_file", type=str)
+    parser.add_argument("-hl_type", "--output_type", type=str)
+    parser.add_argument("-eval_mode", "--evaluation_mode", type=str)
+    args = parser.parse_args()
+    nlp = English()
+
     main(args)
 
 
