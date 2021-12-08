@@ -18,8 +18,7 @@ class BertForHighlightPrediction(BertPreTrainedModel):
         self.num_labels = config.num_labels
         self.bert = BertModel(config, add_pooling_layer=False)
         classifier_dropout = (
-            config.classifier_dropout if \
-                    config.classifier_dropout is not None else config.hidden_dropout_prob
+            config.classifier_dropout if config.classifier_dropout is not None else config.hidden_dropout_prob
         )
         self.dropout = nn.Dropout(classifier_dropout)
         self.tokens_clf = nn.Linear(config.hidden_size, config.num_labels)
@@ -52,7 +51,7 @@ class BertForHighlightPrediction(BertPreTrainedModel):
         )
 
         tokens_output = outputs[0]
-        highlight_logits = self.tokens_clf(tokens_output)
+        highlight_logits = self.tokens_clf(self.dropout(tokens_output))
         highlight_loss = None
 
         if labels is not None:
@@ -81,7 +80,7 @@ class BertForHighlightPrediction(BertPreTrainedModel):
             predictions = torch.argmax(probabilities, dim=-1)
 
             # active filtering
-            active_tokens = inputs['attention_mask']
+            active_tokens = inputs['attention_mask'] == 0
             active_predictions = torch.where(
                 active_tokens,
                 predictions,

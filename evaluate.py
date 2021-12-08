@@ -105,7 +105,8 @@ def main():
     # make it consistent to the function calls.
     config_kwargs = {
             "num_labels": model_args.num_labels,
-            "output_hidden_states": True
+            "output_hidden_states": True,
+            "classifier_dropout": None
     }
     tokenizer_kwargs = {
             # "cache_dir": model_args.cache_dir, 
@@ -196,20 +197,20 @@ def main():
     )
 
     # Trainer
-    trainer = Trainer(
-            model=model, 
-            args=training_args,
-            train_dataset=dataset['train'],
-            eval_dataset=dataset['dev'],
-            data_collator=data_collator
-    )
-    # trainer = BertTrainer(
+    # trainer = Trainer(
     #         model=model, 
     #         args=training_args,
     #         train_dataset=dataset['train'],
     #         eval_dataset=dataset['dev'],
     #         data_collator=data_collator
     # )
+    trainer = BertTrainer(
+            model=model, 
+            args=training_args,
+            train_dataset=dataset['train'],
+            eval_dataset=dataset['dev'],
+            data_collator=data_collator
+    )
     # trainer.model_args = model_args
     
     # ***** strat training *****
@@ -217,12 +218,12 @@ def main():
     results = trainer.train(model_path=model_path)
 
     # ***** start inferencing/prediciton *****
-    # trainer.inference(
-    #         output_jsonl='bert-seq-labeling-dev.jsonl',
-    #         eval_dataset=None, # use the old one
-    #         prob_aggregate_strategy='first',
-    #         save_to_json=True
-    # )
+    trainer.inference(
+            output_jsonl='bert-seq-labeling-dev.jsonl',
+            eval_dataset=None, # use the old one
+            prob_aggregate_strategy='first',
+            save_to_json=True
+    )
 
     return results
 
