@@ -10,7 +10,7 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 <hr/>
 
 **Repositary Updates**
-- [2021/12/08]: See the quick experiments (prototype) on [colab notebook][https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing]
+- [2021/12/08]: See the quick experiments (prototype) on [colab notebook](https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing)
 
 ## Bert-token-labeling
 - Highlight dataset
