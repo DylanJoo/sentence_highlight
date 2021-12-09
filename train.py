@@ -66,6 +66,7 @@ class OurDataArguments:
     eval_file: Optional[str] = field(default="data/parsed/dev/esnli_sents_highlight_contracdict.jsonl")
     test_file: Optional[str] = field(default="data/parsed/test/esnli_sents_highlight_contracdict.jsonl")
     max_seq_length: Optional[int] = field(default=512)
+    pad_to_max_length: bool = field(default=False)
 
 @dataclass
 class OurTrainingArguments(TrainingArguments):
@@ -147,7 +148,7 @@ def main():
             is_split_into_words=True, # allowed the pre-tokenization process, to match the seq-order
             max_length=data_args.max_seq_length, # [TODO] make it callable
             truncation=True,
-            padding=True,
+            padding=True if data_args.pad_to_max_length else False,
         )   
 
         # 1) transforme the label to token-level
@@ -197,20 +198,20 @@ def main():
     )
 
     # Trainer
-    trainer = Trainer(
-            model=model, 
-            args=training_args,
-            train_dataset=dataset['train'],
-            eval_dataset=dataset['dev'],
-            data_collator=data_collator
-    )
-    # trainer = BertTrainer(
+    # trainer = Trainer(
     #         model=model, 
     #         args=training_args,
     #         train_dataset=dataset['train'],
     #         eval_dataset=dataset['dev'],
     #         data_collator=data_collator
     # )
+    trainer = BertTrainer(
+            model=model, 
+            args=training_args,
+            train_dataset=dataset['train'],
+            eval_dataset=dataset['dev'],
+            data_collator=data_collator
+    )
     # trainer.model_args = model_args
     
     # ***** strat training *****
@@ -218,14 +219,14 @@ def main():
     results = trainer.train(model_path=model_path)
 
     # ***** start inferencing/prediciton *****
-    # trainer.inference(
-    #         output_jsonl='bert-seq-labeling-dev.jsonl',
-    #         eval_dataset=None, # use the old one
-    #         prob_aggregate_strategy='first',
-    #         save_to_json=True
-    # )
+    eval_resutls = trainer.inference(
+            output_jsonl='bert-seq-labeling-dev.jsonl',
+            eval_dataset=None, # use the old one
+            prob_aggregate_strategy='first',
+            save_to_json=True
+    )
 
-    return results
+    return results, eval_results
 
 if __name__ == '__main__':
     main()

@@ -80,13 +80,13 @@ class BertForHighlightPrediction(BertPreTrainedModel):
             predictions = torch.argmax(probabilities, dim=-1)
 
             # active filtering
-            active_tokens = inputs['attention_mask'] == 0
+            active_tokens = inputs['attention_mask'] == 1
             active_predictions = torch.where(
                 active_tokens,
                 predictions,
                 torch.tensor(-1).type_as(predictions)
             )
-            return {"probabilities": probabilities[:, :, 1].detach().numpy(), # shape: (batch, length)
-                    "active_predictions": predictions.detach().numpy(),
+            return {"probabilities": probabilities[:, :, 1].detach(), # shape: (batch, length)
+                    "active_predictions": predictions.detach(),
                     "active_tokens": active_tokens}
 

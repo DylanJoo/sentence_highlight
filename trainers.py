@@ -16,34 +16,47 @@ class BertTrainer(Trainer):
 
         output_dict = collections.defaultdict(dict)
 
-        # 1) Retrieve requirment of evaluation (words and word_ids)
         eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset # have already tokenized
-        for i in range(len(eval_dataset)):
-            output_dict[i] = {'words': [None] + eval_dataset['wordsA'] + [None] + eval_dataset['wordsB'] + [None]}
+        def merge_words(examples):
+            features = {'words': [None] * len(examples['wordsA']) }
+            for b in range(len(examples['wordsA'])):
+                features[b] = ["<tag1>"] + examples['wordsA'][b] + ["<tag2>"] + examples['wordsB'][b] + ["<tag3>"]
+            return features
 
-        eval_dataloader = self.get_eval_dataloader(eval_dataset.remove_columns(['wordsA', 'wordsB', 'word_ids']))
+        # the tokenized words (to-be-scored) 
+        # [CONCERN] Process the token in the beginning ?
+        words = eval_dataset.map(
+                function=merge_words, 
+                batched=True,
+                num_proc=multiprocessing.cpu_count()
+        )['words']
 
         f = open(output_jsonl, 'r') 
 
         for b, batch in enumerate(eval_dataloader):
+            for k in batch:
+                batch[k] = batch[k].to(self.args.device)
             output = self.model.inference(batch)
-            prob = (output['probabilities'] * output['active_tokens']).cpu().numpy()
-            label = output['active_predictions'].cpu().numpy()
+            prob = (output['probabilities'] * output['active_tokens']).cpu().tolist()
+            label = output['active_predictions'].cpu().tolist()
 
+            # per example in batch
             for n in range(len(batch)):
                 i_example = b * self.args.eval_batch_size + n
                 predictions = collections.defaultdict(list)
-                word_id_list = eval_dataset.word_ids(i_example)
+                predictions['word'] += words[i_example]
+                word_id_list = eval_dataset['word_ids'][i_example]
 
                 for i, word_i in enumerate(word_id_list):
                     if idx == None:
                         predictions['label'].append(-1)
                         predictions['prob'].append(-1)
+
                     elif word_id_list[i-1] == word_id_list[i]:
                         if prob_aggregate_strategy == 'max':
                             predictions['prob'][-1] = max(prob[n][i], predictions['prob'][-1])
                         if prob_aggregate_strategy == 'mean':
-                            dist = (i - len(predictions['prob'])-1 )
+                            dist = (i - len(predictions['prob']) - 1)
                             predictions['prob'][-1] = \
                                     (predictions['prob'][-1] * dist + prob[n][i]) / (dist + 1)
                         else: 
@@ -52,10 +65,16 @@ class BertTrainer(Trainer):
                         predictions['label'].append(label[n][i])
                         predictions['prob'].append(prob[n][i])
 
-                output_dict[i_example].update(predictions)
+                output_dict[i_example] = predictions
 
                 if save_to_json:
                     f.write(json.dumps(predictions) + '\n')
+
+            if b % 100 = 0:
+                print(f"Inferencing batch: {b}\
+                        \n- words: {predictions['word']}\
+                        \n- labels: {predictions['label']\
+                        \n- probs: {predictions['prob']}}")
 
         return output_dict
 

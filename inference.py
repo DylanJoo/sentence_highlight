@@ -175,7 +175,7 @@ def main():
     dataset['train'] = dataset['train'].map(
         function=preprare_esnli_seq_labeling,
         batched=True,
-        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels', 'word_ids', 'wordsA', 'wordsB'],
+        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels', 'wordsA', 'wordsB'],
         num_proc=multiprocessing.cpu_count()
     )
     
@@ -215,7 +215,7 @@ def main():
     
     # ***** strat training *****
     model_path = None #[TODO] parsing the argument model_args.model_name_or_path 
-    results = trainer.train(model_path=model_path)
+    # results = trainer.train(model_path=model_path)
 
     # ***** start inferencing/prediciton *****
     trainer.inference(

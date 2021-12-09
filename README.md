@@ -2,6 +2,10 @@
 Comparing deep contextualized model for sentences highlighting task. 
 In addition, take the classic explanation model "LIME" with bert-base model as the baseline approach.
 
+** Updates **
+- [2021/12/08]: See the quick experiments (prototype) on [colab notebook][https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing]
+__
+
 1. Term importance estimation
 > Bert-LIME
 2. Learning to explain
@@ -19,7 +23,7 @@ bash run_parse.sh
 bash run_create_highlight_list.sh
 ```
 - Training
-> Huggingface's Bert implementaion with PyTorch frameworks.
+> Huggingface's Bert implementaion with PyTorch frameworks. \
 ```
 python3 train.py \
   --train_file "data/parsed/train/esnli_sents_highligh_contradict.jsonl" \
