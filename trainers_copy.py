@@ -1,6 +1,7 @@
 """
 Customized trainer for setnece highlight
 """
+import multiprocessing
 from transformers import Trainer
 import time
 import json
@@ -18,14 +19,28 @@ class BertTrainer(Trainer):
 
         # 1) Retrieve requirment of evaluation (words and word_ids)
         eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset # have already tokenized
-        for i in range(len(eval_dataset)):
-            output_dict[i] = {'words': [None] + eval_dataset['wordsA'] + [None] + eval_dataset['wordsB'] + [None]}
+        def merge_words(examples):
+            features = {"words": [None] * len(examples['wordsA'])}
+            for b in range(len(examples['wordsA'])):
+                features['words'][b] = [None] + examples['wordsA'][b] + [None] + examples['wordsB'][b] + [None],
+            return features
 
-        eval_dataloader = self.get_eval_dataloader(eval_dataset.remove_columns(['wordsA', 'wordsB', 'word_ids']))
+        words = eval_dataset.map(
+            function=merge_words,
+            batched=True,
+            num_proc=multiprocessing.cpu_count()
+        )['words']
 
-        f = open(output_jsonl, 'r') 
+        output_dict.update(dict(zip(range(len(words)), words)))
+
+        eval_dataloader = self.get_eval_dataloader(eval_dataset.remove_columns(['wordsA', 'wordsB']))
+
+        f = open(output_jsonl, 'w') 
 
         for b, batch in enumerate(eval_dataloader):
+            for k in batch:
+                batch[k] = batch[k].to(self.args.device)
+
             output = self.model.inference(batch)
             prob = (output['probabilities'] * output['active_tokens']).cpu().numpy()
             label = output['active_predictions'].cpu().numpy()
@@ -33,10 +48,10 @@ class BertTrainer(Trainer):
             for n in range(len(batch)):
                 i_example = b * self.args.eval_batch_size + n
                 predictions = collections.defaultdict(list)
-                word_id_list = eval_dataset.word_ids(i_example)
+                word_id_list = eval_dataset['word_ids'][i_example]
 
                 for i, word_i in enumerate(word_id_list):
-                    if idx == None:
+                    if word_i == None:
                         predictions['label'].append(-1)
                         predictions['prob'].append(-1)
                     elif word_id_list[i-1] == word_id_list[i]:
@@ -55,7 +70,12 @@ class BertTrainer(Trainer):
                 output_dict[i_example].update(predictions)
 
                 if save_to_json:
-                    f.write(json.dumps(predictions) + '\n')
+                    f.write(json.dumps(
+                        predictions
+                    ) + '\n')
+            
+            if b % 10 == 0:
+                print(f"Evaluating {b} batches.")
 
         return output_dict
 
@@ -66,3 +86,4 @@ class T5Trainer(Trainer):
 
     def inference(self):
         pass
+

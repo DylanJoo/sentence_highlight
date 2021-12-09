@@ -174,9 +174,10 @@ def main():
     dataset['train'] = dataset['train'].map(
         function=preprare_esnli_seq_labeling,
         batched=True,
-        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels', 'word_ids', 'wordsA', 'wordsB'],
+        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels', 'wordsA', 'wordsB'],
         num_proc=multiprocessing.cpu_count()
     )
+    dataset['train'].remove_columns('word_ids')
     
     ## Preprocessing: dev dataset (preseve the words and word_ids)
     dataset['dev'] = dataset['dev'].map(
