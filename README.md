@@ -2,15 +2,15 @@
 Comparing deep contextualized model for sentences highlighting task. 
 In addition, take the classic explanation model "LIME" with bert-base model as the baseline approach.
 
-** Updates **
-- [2021/12/08]: See the quick experiments (prototype) on [colab notebook][https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing]
-__
-
 1. Term importance estimation
 > Bert-LIME
 2. Learning to explain
 > T5-marks-generation\
 > Bert-seq-labeling
+<hr/>
+
+**Repositary Updates**
+- [2021/12/08]: See the quick experiments (prototype) on [colab notebook][https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing]
 
 ## Bert-token-labeling
 - Highlight dataset
@@ -26,10 +26,26 @@ bash run_create_highlight_list.sh
 > Huggingface's Bert implementaion with PyTorch frameworks. \
 ```
 python3 train.py \
-  --train_file "data/parsed/train/esnli_sents_highligh_contradict.jsonl" \
+  --model_name_or_path bert-base-uncased \
+  --config_name bert-base-uncased \
+  --output_dir ./models/bert-base-uncased \
+  --max_steps 1000 \
+   --train_file "data/parsed/train/esnli_sents_highligh_contradict.jsonl" \
   --eval_file "data/parsed/dev/esnli_sents_highligh_contradict.jsonl"
+  --max_seq_length 128 \
+  --do_train \
 ```
 - Evaluation
+```
+python3 inference.py \
+  --model_name_or_path "{Huggingface's CKPT}" \
+  --config_name bert-base-uncased \
+  --output_dir ./models/bert-base-uncased \
+  --train_file "data/parsed/train/esnli_sents_highlight_contradict.jsonl" \
+  --eval_file "data/parsed/dev/esnli_sents_highlight_contradict.jsonl" \
+  --max_seq_length 128 \
+  --do_eval 
+```
 
 ## T5-marks-generation
 - Highlight dataset
