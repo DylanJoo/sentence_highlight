@@ -7,13 +7,19 @@ import json
 
 # truth jsonl file
 def load_from_jsonl(file_path):
+    """
+    Loading the groundtruth of the esnli development set, 
+    Using the list of started (highlighted) tokens as the truth for each instance.
+    """
     truth = collections.OrderedDict()
+    sent = collections.OrderedDict()
 
     with open(file_path, 'r') as f:
         for i, line in enumerate(f):
-            truth[i] = json.loads(line)['keywordB']
+            truth[i] = json.loads(line)['keywordsB']
+            sent[i] = json.loads(line)['sentA'] + " | " + json.loads(line)['sentB']
 
-    return truth
+    return truth, sent
 
 # prediction text files
 def load_from_bert_lime(file_path, prob_threshold=0, topk=-1, topn=-1):
@@ -25,20 +31,22 @@ def load_from_bert_lime(file_path, prob_threshold=0, topk=-1, topn=-1):
 def load_from_bert_seq_labeling(file_path, prob_threshold=0, sentA=True):
     """
     File type: dictionary file, e.g. .json, .jsonl
-    (1) Post-process the token-to-word labeling.
+    Function for loading the predicted jsonl file, append the "selected" tokens, 
+    which matched the requirements of "prob_threshold"
     """
-    pred = collection.defaultdict(list)
+    pred = collections.defaultdict(list)
+    punc = (lambda x: x in [",", ".", "?", "!"])
 
     with open(file_path, 'r') as f:
         for i, line in enumerate(f):
             data = json.loads(line)
             sentB = None
-            # pred[i] = [(w, p) for (w, p) in zip(data['word'], data['prob']) if p >= prob_threshold]
-            for i, (w, p) in enumerate(zip(data['word'], data['prob'])):
+
+            for j, (w, p) in enumerate(zip(data['word'], data['prob'])):
                 if p == -1:
-                    sentB = sentA if i == 0 else True
-                elif p >= prob_threshold and sentB:
-                    pred[i].append([(w, p)])
+                    sentB = sentA if j == 0 else True
+                elif p >= prob_threshold and sentB and punc(w) is False:
+                    pred[i].append(w)
     return pred
 
 
@@ -59,29 +67,31 @@ def load_from_t5_mark_generation(file_path, show_negative=0):
                 if tok.text == "*":
                     hl = 0 if hl else 1
                 elif show_negative:
-                    pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
+                    # pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
+                    pred[i] += [tok.text] if hl else []
                 else:
-                    pred[i] += [(tok.text, 1)] if hl else []
+                    # pred[i] += [(tok.text, 1)] if hl else []
+                    pred[i] += [tok.text] if hl else []
     return pred
 
 
 def main(args):
-    truth = load_from_jsonl(args.path_truth_file)
-    if args.output_type == 'bert_lime':
+    truth, strings = load_from_jsonl(args.path_truth_file)
+    if args.output_type == 'bert-lime':
         pred = load_from_bert_lime(
                 args.path_pred_file
         )
-    elif args.output_type == 'bert_seq_labeling':
+    elif args.output_type == 'bert-seq-labeling':
         pred = load_from_bert_seq_labeling(
                 args.path_pred_file,
-                prob_threshold=0, 
+                prob_threshold=0.5, 
                 sentA=False
         )
-    elif args.output_type == 'bert_span_detection':
+    elif args.output_type == 'bert-span-detection':
         pred = load_from_bert_span_detection(
                 args.path_pred_file
         )
-    elif args.output_type == 't5_marks_generation':
+    elif args.output_type == 't5-marks-generation':
         pred = load_from_t5_mark_generation(
                 args.path_pred_file,
                 show_negative=0
@@ -93,29 +103,44 @@ def main(args):
     assert len(truth) != len(pred), "Inconsisent sizes of truth and predictions"
     metrics = collections.defaultdict(list)
 
-    for i in range(len(truth)):
+    for j, (truth_tokens, pred_tokens) in enumerate(zip(truth.values(), pred.values())):
         # [CONCERN] what if the tokens are redundant, revised if needed.
-        hits = len(set(truth[i]) & set(pred[i]))
-        metrics['precision'].append( hits / len(pred[i]) )
-        metrics['recall'].append( hits / len(truth[i]) )
-        metrics['f1'].append( 
-                2 * metrics['precision'] * metrics['recall'] / (metrics['precision'] + metrics['recall'])
-        )
-    return "********************************\
+        print(f"Sentence pair: {strings[j]}\
+                \n - Ground truth tokens: {truth_tokens}\
+                \n - Highlighted tokens: {pred_tokens}")
+
+        hits = set(truth_tokens) & set(pred_tokens)
+        precision = (len(hits) / len(pred_tokens)) if len(pred_tokens) != 0 else 0
+        recall = (len(hits) / len(truth_tokens)) if len(truth_tokens) != 0 else 0
+        if precision + recall != 0:
+            fscore = 2 * precision * recall / (precision + recall)
+        else:
+            fscore = 0
+
+        if len(truth_tokens) != 0:
+            metrics['precision'].append(precision)
+            metrics['recall'].append(recall)
+            metrics['f1'].append(fscore)
+
+    print("********************************\
             \nMean {:<9}: {:<5}\
             \nMean {:<9}: {:<5}\
             \nMean {:<9}: {:<5}\
             \nNum of evaluated samples: {}\
-            \n********************************".format('precision', np.mean(metrics['precision']),
-                                                       'recall', np.mean(metrics['recall']),
-                                                       'f1-score', np.mean(metrics['f1']), len(truth))
+            \n********************************".format( 
+                'precision', np.mean(metrics['precision']), 
+                'recall', np.mean(metrics['recall']), 
+                'f1-score', np.mean(metrics['f1']), j+1
+            ))
 
-if __name__ == "__main__()":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-truth", "--path_truth_file", type=str)
     parser.add_argument("-pred", "--path_pred_file", type=str)
     parser.add_argument("-hl_type", "--output_type", type=str)
     parser.add_argument("-eval_mode", "--evaluation_mode", type=str)
+    # [TODO] Make the eval_mode flexible on the evaluation model,
+    #   say highlightA & B or highlightB only
     args = parser.parse_args()
     nlp = English()
 
