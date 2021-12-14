@@ -12,6 +12,12 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 **Repositary Updates**
 - [2021/12/08]: See the quick experiments (prototype) on [colab notebook](https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing)
 
+## Bert-LIME
+<hr/>
+
+## T5-marks-generation
+<hr/>
+
 ## Bert-token-labeling
 - Highlight dataset
 > a) Download the files from 'OanaMariaCamburu/e-SNLI'\
