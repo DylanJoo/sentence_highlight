@@ -3,10 +3,10 @@ Comparing deep contextualized model for sentences highlighting task.
 In addition, take the classic explanation model "LIME" with bert-base model as the baseline approach.
 
 1. Term importance estimation
-> Bert-LIME ([OLD](https://github.com/DylanJoo/temp/tree/main/lime))
+> Bert-LIME (See [OLD](https://github.com/DylanJoo/temp/tree/main/lime))
 2. Learning to explain
 > T5-marks-generation (TBA) \
-> Bert-token-labeling (THIS REPO)
+> Bert-seq-labeling (THIS REPO)
 <hr/>
 
 **Repositary Updates**
@@ -18,7 +18,7 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 ## T5-marks-generation
 <hr/>
 
-## Bert-token-labeling
+## Bert-seq-labeling
 - Highlight dataset
 > a) Download the files from 'OanaMariaCamburu/e-SNLI'\
 > b) Parsing the csv file into text file\
@@ -41,7 +41,7 @@ python3 train.py \
   --max_seq_length 128 \
   --do_train \
 ```
-- Evaluation
+- Inferencing
 ```
 python3 inference.py \
   --model_name_or_path "{Huggingface's CKPT}" \
@@ -51,6 +51,33 @@ python3 inference.py \
   --eval_file "data/parsed/dev/esnli_sents_highlight_contradict.jsonl" \
   --max_seq_length 128 \
   --do_eval 
+```
+- Evaluation
+```
+# Evaluate bert-seq-labeling on esnli
+python3 evaluation.py \
+    -truth 'data/parsed/dev/esnli_sents_highlight_contradict.jsonl' \
+    -pred 'results/esnli/bert-seq-labeling-dev.jsonl' \
+    -hl_type 'bert-seq-labeling'
+
+# Evalute t5-marks-generation
+python3 evaluation.py \
+    -truth 'data/parsed/dev/esnli_sents_highlight_contradict.jsonl' \
+    -pred 'results/esnli/t5-marks-generation-dev.txt' \
+    -hl_type 't5-marks-generation'
+```
+- Results 
+> Ground truth tokens: ['men', 'fighting']              
+> Highlighted tokens: ['men', 'fighting'] \
+> Ground truth tokens: ['jackets', 'walk', 'to', 'school']               
+> Highlighted tokens: ['jackets']
+```
+********************************            
+Mean precision: 1.0              
+Mean recall   : 0.625            
+Mean f1-score : 0.7              
+Num of evaluated samples: 2            
+********************************
 ```
 
 ## T5-marks-generation
