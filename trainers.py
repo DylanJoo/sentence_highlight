@@ -15,12 +15,14 @@ class BertTrainer(Trainer):
                   save_to_json=True):
 
         output_dict = collections.defaultdict(dict)
+        eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset
 
-        eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset # have already tokenized
         def merge_words(examples):
             features = {'words': [None] * len(examples['wordsA']) }
             for b in range(len(examples['wordsA'])):
-                features[b] = ["<tag1>"] + examples['wordsA'][b] + ["<tag2>"] + examples['wordsB'][b] + ["<tag3>"]
+                features['words'][b] = \
+                        ["<tag1>"] + examples['wordsA'][b] + \
+                        ["<tag2>"] + examples['wordsB'][b] + ["<tag3>"]
             return features
 
         # the tokenized words (to-be-scored) 
@@ -31,8 +33,10 @@ class BertTrainer(Trainer):
                 num_proc=multiprocessing.cpu_count()
         )['words']
 
-        f = open(output_jsonl, 'r') 
-
+        f = open(output_jsonl, 'r')
+        eval_dataloader = self.get_eval_dataloader(
+                eval_dataset.remove_columns(['wordsA', 'wordsB'])
+        )
         for b, batch in enumerate(eval_dataloader):
             for k in batch:
                 batch[k] = batch[k].to(self.args.device)
@@ -41,7 +45,7 @@ class BertTrainer(Trainer):
             label = output['active_predictions'].cpu().tolist()
 
             # per example in batch
-            for n in range(len(batch)):
+            for n in range(self.args.eval_batch_size):
                 i_example = b * self.args.eval_batch_size + n
                 predictions = collections.defaultdict(list)
                 predictions['word'] += words[i_example]
@@ -71,10 +75,10 @@ class BertTrainer(Trainer):
                     f.write(json.dumps(predictions) + '\n')
 
             if b % 100 = 0:
-                print(f"Inferencing batch: {b}\
-                        \n- words: {predictions['word']}\
-                        \n- labels: {predictions['label']\
-                        \n- probs: {predictions['prob']}}")
+                print(f"Inferencing batch: {b}")
+                print(f"words: {predictions['word']}")
+                print(f"labels: {predictions['label']")
+                print(f"probs: {predictions['prob']}")
 
         return output_dict
 

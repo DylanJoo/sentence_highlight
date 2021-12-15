@@ -34,13 +34,14 @@ def load_from_bert_seq_labeling(file_path, prob_threshold=0, sentA=True):
     Function for loading the predicted jsonl file, append the "selected" tokens, 
     which matched the requirements of "prob_threshold"
     """
-    pred = collections.defaultdict(list)
+    pred = collections.OrderedDict()
     punc = (lambda x: x in [",", ".", "?", "!"])
 
     with open(file_path, 'r') as f:
         for i, line in enumerate(f):
             data = json.loads(line)
             sentB = None
+            pred[i] = []
 
             for j, (w, p) in enumerate(zip(data['word'], data['prob'])):
                 if p == -1:
