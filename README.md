@@ -11,6 +11,11 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 
 **Repositary Updates**
 - [2021/12/08]: See the quick experiments (prototype) on [colab notebook](https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing)
+- [2021/12/15]: The latest evaluation results of bert-seq-labeling (10000 steps): 
+> E-snli Dev sets \
+> Mean precision: 0.8515797960428833            
+> Mean recall   : 0.7201867890092417            
+> Mean f1-score : 0.7329909700176722 
 
 ## Bert-LIME
 <hr/>
