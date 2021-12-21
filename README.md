@@ -72,10 +72,19 @@ python3 evaluation.py \
     -hl_type 't5-marks-generation'
 ```
 - Results 
+> Examples: \
 > Ground truth tokens: ['men', 'fighting']              
 > Highlighted tokens: ['men', 'fighting'] \
 > Ground truth tokens: ['jackets', 'walk', 'to', 'school']               
 > Highlighted tokens: ['jackets']
+
+Methods | Mean Precision | Mean Precision | Mean F1-score
+:------- |:--------------:|:--------------:|:-------------:
+Bert-LIME           | -     | -     | -
+Bert-seq-labeling   | 1.000 | 0.625 | 0.70
+Bert-span-detection | 0.847 | 0.626 | 0.676
+
+
 ```
 ********************************            
 Mean precision: 1.0              
