@@ -72,20 +72,28 @@ python3 evaluation.py \
     -hl_type 't5-marks-generation'
 ```
 - Results 
-> Examples: \
-> Ground truth tokens: ['men', 'fighting']              
-> Highlighted tokens: ['men', 'fighting'] \
-> Ground truth tokens: ['jackets', 'walk', 'to', 'school']               
-> Highlighted tokens: ['jackets']
 
+*E-snli Dev set (#examples 3278)*
 Methods | Mean Precision | Mean Precision | Mean F1-score
 :------- |:--------------:|:--------------:|:-------------:
 Bert-LIME           | -     | -     | -
 Bert-seq-labeling   | 1.000 | 0.625 | 0.70
 Bert-span-detection | 0.847 | 0.626 | 0.676
 
+*E-snli Dev set (#examples 3237)*
+Methods | Mean Precision | Mean Precision | Mean F1-score
+:------- |:--------------:|:--------------:|:-------------:
+Bert-LIME           | -     | -     | -
+Bert-seq-labeling   | 0.000 | 0.000 | 0.000
+Bert-span-detection | 0.856 | 0.644 | 0.691
+
 
 ```
+Examples: \
+ Ground truth tokens: ['men', 'fighting']              
+ Highlighted tokens: ['men', 'fighting'] \
+ Ground truth tokens: ['jackets', 'walk', 'to', 'school']               
+ Highlighted tokens: ['jackets']
 ********************************            
 Mean precision: 1.0              
 Mean recall   : 0.625            
