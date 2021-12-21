@@ -67,12 +67,29 @@ def load_from_t5_mark_generation(file_path, show_negative=0):
             for tok in nlp(line.strip()):
                 if tok.text == "*":
                     hl = 0 if hl else 1
-                elif show_negative:
-                    # pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
-                    pred[i] += [tok.text] if hl else []
-                else:
+                elif punc(tok.text) is False:
                     # pred[i] += [(tok.text, 1)] if hl else []
                     pred[i] += [tok.text] if hl else []
+                    if show_negative:
+                        # pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
+                        pred[i] += [tok.text] if hl else []
+    return pred
+
+def load_from_t5_token_extraction(file_path, show_negative=0):
+    """
+    File type: Raw text, e.g. .txt, .tsv
+    """
+    pred = collections.defaultdict(list)
+    punc = (lambda x: x in [",", ".", "?", "!"])
+
+    with open(file_path, 'r') as f:
+        for i, line in enumerate(f):
+            pred[i] = []
+
+            for j, w in enumerate(line.split("|||")):
+                w = w.strip()
+                pred[i] += [w] if punc(w) is False else []
+
     return pred
 
 
@@ -96,6 +113,10 @@ def main(args):
         pred = load_from_t5_mark_generation(
                 args.path_pred_file,
                 show_negative=0
+        )
+    elif args.output_type == 't5-token-extraction':
+        pred = load_from_t5_token_extraction(
+                args.path_pred_file,
         )
     else:
         print("Invalid type of highlight tasks")

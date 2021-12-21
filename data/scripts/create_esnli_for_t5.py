@@ -25,7 +25,7 @@ def extract_marked_token(sentence):
         token_list += [token]
 
     if len(token_list) == 0:
-        return "None"
+        return "."
     else:
         return " ||| ".join(token_list)
 
@@ -60,6 +60,10 @@ def convert_to_marks_generation(args):
         if args.target_type == "highlight_conditional":
             example = conditional_prefix(sa, sb, hla, hlb, lbl)
         
+        if args.target_type == "highlight_extraction":
+            hlb_toks = extract_marked_token(hlb)
+            example = f"Sentence1: {sa} Sentence2: {sb} Highlight:\t{hlb_toks}\n"
+
         output.write(example)
 
 convert_to_marks_generation(args)

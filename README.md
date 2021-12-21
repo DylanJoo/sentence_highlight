@@ -5,17 +5,14 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 1. Term importance estimation
 > Bert-LIME (See [OLD](https://github.com/DylanJoo/temp/tree/main/lime))
 2. Learning to explain
+> Bert-seq-labeling 
 > T5-marks-generation (TBA) \
-> Bert-seq-labeling (THIS REPO)
+> T5-token-extraction (TBA) \
 <hr/>
 
 **Repositary Updates**
 - [2021/12/08]: See the quick experiments (prototype) on [colab notebook](https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing)
 - [2021/12/15]: The latest evaluation results of bert-seq-labeling (10000 steps): 
-> E-snli Dev sets \
-> Mean precision: 0.8515797960428833            
-> Mean recall   : 0.7201867890092417            
-> Mean f1-score : 0.7329909700176722 
 
 ## Bert-LIME
 <hr/>
@@ -73,20 +70,23 @@ python3 evaluation.py \
 ```
 - Results 
 
-*E-snli Dev set (#examples 3278)*
-Methods | Mean Precision | Mean Precision | Mean F1-score
+**E-snli Dev set (#examples 3278)**
+Methods  | Mean Precision | Mean Recall | Mean F1-score
 :------- |:--------------:|:--------------:|:-------------:
-Bert-LIME           | -     | -     | -
-Bert-seq-labeling   | 1.000 | 0.625 | 0.70
-Bert-span-detection | 0.847 | 0.626 | 0.676
+Bert-LIME             | -     | -     | -
+Bert-seq-labeling(.5) | 0.852 | 0.720 | 0.733
+Bert-span-detection   | -     | -     | -
+T5-marks-generation   | 0.847 | 0.626 | 0.676
+T5-token-extraction   | 0.839 | 0.696 | 0.710
 
-*E-snli Dev set (#examples 3237)*
-Methods | Mean Precision | Mean Precision | Mean F1-score
+**E-snli Dev set (#examples 3237)**
+Methods  | Mean Precision | Mean Recall | Mean F1-score
 :------- |:--------------:|:--------------:|:-------------:
-Bert-LIME           | -     | -     | -
-Bert-seq-labeling   | 0.000 | 0.000 | 0.000
-Bert-span-detection | 0.856 | 0.644 | 0.691
-
+Bert-LIME             | -     | -     | -
+Bert-seq-labeling(.5) | 0.000 | 0.000 | 0.000
+Bert-span-detection   | -     | -     | -    
+T5-marks-generation   | 0.856 | 0.644 | 0.691
+T5-token-extraction   | 0.845 | 0.703 | 0.718
 
 ```
 Examples: \
