@@ -101,7 +101,7 @@ def main(args):
         print("Invalid type of highlight tasks")
         exit(0)
 
-    assert len(truth) != len(pred), "Inconsisent sizes of truth and predictions"
+    assert len(truth) == len(pred), "Inconsisent sizes of truth and predictions"
     metrics = collections.defaultdict(list)
 
     for j, (truth_tokens, pred_tokens) in enumerate(zip(truth.values(), pred.values())):
@@ -146,7 +146,3 @@ if __name__ == "__main__":
     nlp = English()
 
     main(args)
-
-
-
-

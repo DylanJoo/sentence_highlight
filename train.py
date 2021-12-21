@@ -62,9 +62,12 @@ class OurDataArguments:
     validation_split_percentage: Optional[int] = field(default=5)
     preprocessing_num_workers: Optional[int] = field(default=None)
     # Customized arguments
-    train_file: Optional[str] = field(default="data/parsed/train/esnli_sents_highlight_contracdict.jsonl")
-    eval_file: Optional[str] = field(default="data/parsed/dev/esnli_sents_highlight_contracdict.jsonl")
-    test_file: Optional[str] = field(default="data/parsed/test/esnli_sents_highlight_contracdict.jsonl")
+    train_file: Optional[str] = field(default= \
+            "data/parsed/train/esnli_sents_highlight_contracdict.jsonl")
+    eval_file: Optional[str] = field(default=\
+            "data/parsed/dev/esnli_sents_highlight_contracdict.jsonl")
+    test_file: Optional[str] = field(default=\
+            "data/parsed/test/esnli_sents_highlight_contracdict.jsonl")
     max_seq_length: Optional[int] = field(default=512)
     pad_to_max_length: bool = field(default=False)
 
@@ -74,13 +77,16 @@ class OurTrainingArguments(TrainingArguments):
     do_train: bool = field(default=False)
     do_eval: bool = field(default=False)
     save_steps: int = field(default=1000)
+    eval_steps: int = field(default=1000)
+    evaluate_during_training: bool = field(default=False)
+    evaluation_strategy: Optional[str] = field(default='no')
     per_device_train_batch_size: int = field(default=16)
     per_device_eval_batch_size: int = field(default=16)
     weight_decay: float = field(default=0.0)
     logging_dir: Optional[str] = field(default='./logs')
     warmup_steps: int = field(default=1000)
     resume_from_checkpiint: Optional[str] = field(default=None)
-
+    overwrite_cache: bool = field(default=False)
 
 
 def main():
@@ -96,7 +102,8 @@ def main():
     parser = HfArgumentParser((OurModelArguments, OurDataArguments, OurTrainingArguments))
     # model_args, data_args, training_args = parser.parse_args_into_datalcasses()
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = \
+                parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         # [CONCERN] Deprecated? or any parser issue.
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
@@ -109,8 +116,8 @@ def main():
             "output_hidden_states": True
     }
     tokenizer_kwargs = {
-            # "cache_dir": model_args.cache_dir, 
-            # "use_fast": model_args.use_fast_tokenizer
+            "cache_dir": model_args.cache_dir, 
+            "use_fast": model_args.use_fast_tokenizer
     }
     config = AutoConfig.from_pretrained(model_args.config_name, **config_kwargs)
     tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name, **tokenizer_kwargs)
@@ -145,7 +152,7 @@ def main():
         size = len(examples['wordsA'])
         features = tokenizer(
             examples['wordsA'], examples['wordsB'],
-            is_split_into_words=True, # allowed the pre-tokenization process, to match the seq-order
+            is_split_into_words=True, # allowed pre-tokenization process, to match the seq-order
             max_length=data_args.max_seq_length, # [TODO] make it callable
             truncation=True,
             padding=True if data_args.pad_to_max_length else False,
@@ -176,7 +183,8 @@ def main():
         function=preprare_esnli_seq_labeling,
         batched=True,
         remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels', 'wordsA', 'wordsB'],
-        num_proc=multiprocessing.cpu_count()
+        num_proc=multiprocessing.cpu_count(),
+        load_from_cache_file=not data_args.overwrite_cache,
     )
     dataset['train'].remove_columns('word_ids')
     
@@ -185,7 +193,8 @@ def main():
         function=preprare_esnli_seq_labeling,
         batched=True,
         remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
-        num_proc=multiprocessing.cpu_count()
+        num_proc=multiprocessing.cpu_count(),
+        load_from_cache_file=not data_args.overwrite_cache,
     )
 
 
@@ -198,13 +207,6 @@ def main():
     )
 
     # Trainer
-    # trainer = Trainer(
-    #         model=model, 
-    #         args=training_args,
-    #         train_dataset=dataset['train'],
-    #         eval_dataset=dataset['dev'],
-    #         data_collator=data_collator
-    # )
     trainer = BertTrainer(
             model=model, 
             args=training_args,
@@ -218,15 +220,7 @@ def main():
     model_path = None #[TODO] parsing the argument model_args.model_name_or_path 
     results = trainer.train(model_path=model_path)
 
-    # ***** start inferencing/prediciton *****
-    eval_resutls = trainer.inference(
-            output_jsonl='bert-seq-labeling-dev.jsonl',
-            eval_dataset=None, # use the old one
-            prob_aggregate_strategy='first',
-            save_to_json=True
-    )
-
-    return results, eval_results
+    return results
 
 if __name__ == '__main__':
     main()

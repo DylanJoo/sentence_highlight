@@ -11,6 +11,7 @@ class BertTrainer(Trainer):
     def inference(self,
                   output_jsonl='results.jsonl',
                   eval_dataset=None, 
+                  test_dataset=None, 
                   prob_aggregate_strategy='first',
                   save_to_json=True):
 
@@ -33,7 +34,7 @@ class BertTrainer(Trainer):
                 num_proc=multiprocessing.cpu_count()
         )['words']
 
-        f = open(output_jsonl, 'r')
+        f = open(output_jsonl, 'w')
         eval_dataloader = self.get_eval_dataloader(
                 eval_dataset.remove_columns(['wordsA', 'wordsB'])
         )
@@ -52,10 +53,9 @@ class BertTrainer(Trainer):
                 word_id_list = eval_dataset['word_ids'][i_example]
 
                 for i, word_i in enumerate(word_id_list):
-                    if idx == None:
+                    if word_i == None:
                         predictions['label'].append(-1)
                         predictions['prob'].append(-1)
-
                     elif word_id_list[i-1] == word_id_list[i]:
                         if prob_aggregate_strategy == 'max':
                             predictions['prob'][-1] = max(prob[n][i], predictions['prob'][-1])
@@ -74,11 +74,13 @@ class BertTrainer(Trainer):
                 if save_to_json:
                     f.write(json.dumps(predictions) + '\n')
 
-            if b % 100 = 0:
+            if b % 100 == 0:
                 print(f"Inferencing batch: {b}")
-                print(f"words: {predictions['word']}")
-                print(f"labels: {predictions['label']")
-                print(f"probs: {predictions['prob']}")
+                print("Output: {}".format(
+                    [(w, p, l) for w, p, l in zip(
+                        predictions['word'], predictions['prob'], predictions['label']
+                    )]
+                )
 
         return output_dict
 

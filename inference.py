@@ -62,16 +62,18 @@ class OurDataArguments:
     validation_split_percentage: Optional[int] = field(default=5)
     preprocessing_num_workers: Optional[int] = field(default=None)
     # Customized arguments
-    train_file: Optional[str] = field(default="data/parsed/train/esnli_sents_highlight_contracdict.jsonl")
-    eval_file: Optional[str] = field(default="data/parsed/dev/esnli_sents_highlight_contracdict.jsonl")
-    test_file: Optional[str] = field(default="data/parsed/test/esnli_sents_highlight_contracdict.jsonl")
+    eval_file: Optional[str] = field(default=\
+            "data/parsed/dev/esnli_sents_highlight_contracdict.jsonl")
+    test_file: Optional[str] = field(default=\
+            "data/parsed/test/esnli_sents_highlight_contracdict.jsonl")
     max_seq_length: Optional[int] = field(default=512)
 
 @dataclass
 class OurTrainingArguments(TrainingArguments):
     output_dir: str = field(default='./models')
     do_train: bool = field(default=False)
-    do_eval: bool = field(default=False)
+    do_eval: bool = field(default=True)
+    do_test: bool = field(default=False)
     save_steps: int = field(default=1000)
     per_device_train_batch_size: int = field(default=16)
     per_device_eval_batch_size: int = field(default=16)
@@ -79,8 +81,7 @@ class OurTrainingArguments(TrainingArguments):
     logging_dir: Optional[str] = field(default='./logs')
     warmup_steps: int = field(default=1000)
     resume_from_checkpiint: Optional[str] = field(default=None)
-
-
+    result_json: Optional[str] = field(default='/results')
 
 def main():
     """
@@ -167,20 +168,20 @@ def main():
 
     ## Loading form json
     dataset = DatasetDict.from_json({
-        "train": data_args.train_file,
         "dev": data_args.eval_file
+        "test": data_args.test_file
     })
 
     ## Preprocessing: training dataset
-    dataset['train'] = dataset['train'].map(
+    dataset['dev'] = dataset['dev'].map(
         function=preprare_esnli_seq_labeling,
         batched=True,
-        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels', 'wordsA', 'wordsB'],
+        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
         num_proc=multiprocessing.cpu_count()
     )
     
     ## Preprocessing: dev dataset (preseve the words and word_ids)
-    dataset['dev'] = dataset['dev'].map(
+    dataset['test'] = dataset['test'].map(
         function=preprare_esnli_seq_labeling,
         batched=True,
         remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
@@ -197,35 +198,36 @@ def main():
     )
 
     # Trainer
-    # trainer = Trainer(
-    #         model=model, 
-    #         args=training_args,
-    #         train_dataset=dataset['train'],
-    #         eval_dataset=dataset['dev'],
-    #         data_collator=data_collator
-    # )
     trainer = BertTrainer(
             model=model, 
             args=training_args,
-            train_dataset=dataset['train'],
             eval_dataset=dataset['dev'],
+            test_dataset=dataset['test'],
             data_collator=data_collator
     )
-    # trainer.model_args = model_args
     
-    # ***** strat training *****
-    model_path = None #[TODO] parsing the argument model_args.model_name_or_path 
-    # results = trainer.train(model_path=model_path)
-
     # ***** start inferencing/prediciton *****
-    trainer.inference(
-            output_jsonl='bert-seq-labeling-dev.jsonl',
-            eval_dataset=None, # use the old one
-            prob_aggregate_strategy='first',
-            save_to_json=True
-    )
+    # on dev set
+    if training_args.do_eval:
+        results = trainer.inference(
+                output_jsonl='dev'+training_args.result_json,
+                eval_dataset=None, # use the old one
+                test_dataset=None, # use the old one
+                prob_aggregate_strategy='first',
+                save_to_json=True
+        )
 
-    return results
+    # on test set
+    if training_args.do_test:
+        results = trainer.inference(
+                output_jsonl=training_args.result_json,
+                eval_dataset=None, # use the old one
+                test_dataset=None, # use the old one
+                prob_aggregate_strategy='first',
+                save_to_json=True
+        )
+
+    return "DONE"
 
 if __name__ == '__main__':
     main()

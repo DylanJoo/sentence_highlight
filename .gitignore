@@ -6,3 +6,4 @@ data/**/*.tsv
 data/**/*.jsonl
 data/**/*.json
 *.json
+*.swp
