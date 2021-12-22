@@ -27,10 +27,10 @@ def main(args):
     (0) TPU preparation 
     (1) Data preparation
     """
-    if args.task_type == 'marks-generation':
-        TRAIN_FILE = os.path.joins(BASE_DIR, 'data/esnli_sents_highlight_contradict_pairs.tsv')
-    elif args.task_type == 'token-extraction'
-        TRAIN_FILE = os.path.joins(BASE_DIR, 'data/esnli_sents_highlight_extraction_pairs.tsv')
+    if args.task_type == 'marks_generation':
+        TRAIN_FILE = os.path.join(BASE_DIR, 'data/train//esnli_sents_highlight_contradict_pairs.tsv')
+    elif args.task_type == 'token_extraction':
+        TRAIN_FILE = os.path.join(BASE_DIR, 'data/train/esnli_sents_highlight_extraction_pairs.tsv')
 
     # ***** 1a *****
     def esnli_highlight_ds(split, shuffle_files):
@@ -63,19 +63,20 @@ def main(args):
     # ****** 2  *****
     t5.data.TaskRegistry.remove(args.task_type)
     t5.data.TaskRegistry.add(
-            args.task_type
+            args.task_type,
             dataset_fn=esnli_highlight_ds, 
             splits=["train"],
             text_preprocessor=[esnli_highlight_prep]
     )
     demo = t5.data.TaskRegistry.get(args.task_type)
-    ds = train.get_dataset(split="train", sequence_length={"inputs": 512, "targets": 64}, shuffle=True)
-    print("[ESNLI]: A few preprocessed training examples...")
+    ds = demo.get_dataset(split="train", sequence_length={"inputs": 512, "targets": 64}, shuffle=True)
+    print("\n********** A few preprocessed training examples. ******")
     for ex in tfds.as_numpy(ds.take(1)):
         print(ex)
+    print("\n")
 
     # ***** 3  *****
-    MDOEL_SIZE = arg.model_size if args.model_size else 'base'
+    MODEL_SIZE = args.model_size if args.model_size else 'base'
     # Public GCS path for T5 pre-trained model checkpoints
     FINETUNE_STEPS = args.train_steps
     PRETRAINED_DIR = os.path.join("gs://t5-data/pretrained_models", MODEL_SIZE)
@@ -100,7 +101,7 @@ def main(args):
         tpu_topology=TPU_TOPOLOGY,
         model_parallelism=model_parallelism,
         sequence_length={"inputs": args.max_src_len, "targets": args.max_tgt_len},
-        batch_size=train_batch_size if arg.train_batch_size is None else args.train_batch_size,
+        batch_size=train_batch_size if args.train_batch_size is None else args.train_batch_size,
         # batch_size=("tokens_per_batch", 65536),
         learning_rate_schedule=0.001,
         save_checkpoints_steps=1000,
@@ -116,12 +117,19 @@ def main(args):
         split="train"
     )
 
+    # ***** 4  *****
+    print(f"\n********** FINETUNING DETAIL **********\
+            \nModel path: {MODEL_DIR} \
+            \nModel size: {MODEL_SIZE} \
+            \nTask type: {args.task_type} \
+            \nNumber of steps: {args.train_steps}\n")
+
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base_dir", type=str, require=True)
-    parser.add_argument("--task_type", type=str, default="marks-generation")
+    parser.add_argument("--base_dir", type=str, required=True)
+    parser.add_argument("--task_type", type=str, default="marks_generation")
     parser.add_argument("--model_size", type=str, default="base")
     parser.add_argument("--train_batch_size", type=int, default=16)
     parser.add_argument("--train_steps", type=int, default=4000)
