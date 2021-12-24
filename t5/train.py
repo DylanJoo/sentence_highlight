@@ -27,10 +27,10 @@ def main(args):
     (0) TPU preparation 
     (1) Data preparation
     """
-    if args.task_type == 'marks_generation':
-        TRAIN_FILE = os.path.join(BASE_DIR, 'data/train//esnli_sents_highlight_contradict_pairs.tsv')
-    elif args.task_type == 'token_extraction':
-        TRAIN_FILE = os.path.join(BASE_DIR, 'data/train/esnli_sents_highlight_extraction_pairs.tsv')
+    if args.task_type == 'marks-generation':
+        TRAIN_FILE = os.path.join(BASE_DIR, 'data/train/esnli_sents_highlight_contradict_pairs.tsv')
+    elif args.task_type == 'token-extraction':
+        TRAIN_FILE = os.path.join(BASE_DIR, 'data/train/esnli_sents_highlight_contradict_tokens_pairs.tsv')
 
     # ***** 1a *****
     def esnli_highlight_ds(split, shuffle_files):
@@ -61,14 +61,15 @@ def main(args):
                       num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     # ****** 2  *****
-    t5.data.TaskRegistry.remove(args.task_type)
+    TASK_NAME = task_type.replace("-", "_")
+    t5.data.TaskRegistry.remove(TASK_NAME)
     t5.data.TaskRegistry.add(
-            args.task_type,
+            TASK_NAME,
             dataset_fn=esnli_highlight_ds, 
             splits=["train"],
             text_preprocessor=[esnli_highlight_prep]
     )
-    demo = t5.data.TaskRegistry.get(args.task_type)
+    demo = t5.data.TaskRegistry.get(TASK_NAME)
     ds = demo.get_dataset(split="train", sequence_length={"inputs": 512, "targets": 64}, shuffle=True)
     print("\n********** A few preprocessed training examples. ******")
     for ex in tfds.as_numpy(ds.take(1)):
@@ -110,7 +111,7 @@ def main(args):
     )
 
     model.finetune(
-        mixture_or_task_name=args.task_type,
+        mixture_or_task_name=TASK_NAME,
         finetune_steps=args.train_steps,
         pretrained_model_dir=PRETRAINED_DIR,
         pretrained_checkpoint_step=-1,
