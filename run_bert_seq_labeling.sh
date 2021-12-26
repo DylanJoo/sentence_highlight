@@ -1,6 +1,6 @@
 # Finetunning for sentence highlight task with bert-token-labeling model 
 # [TODO] Change the arugmnet of model name to self defined model, but the default tokenizer and configs
-python3 /content/sentence_highlight/train.py \
+python3 bert-seq-labeling/train.py \
   --model_name_or_path checkpoints/bert-base-uncased \
   --output_dir ./models/bert-base-uncased/train \
   --config_name bert-base-uncased \
@@ -16,7 +16,7 @@ python3 /content/sentence_highlight/train.py \
   --do_train \
   --do_eval
 
-python3 inference.py \
+python3 bert-seq-labeling/inference.py \
   --model_name_or_path checkpoints/bert-base-uncased/checkpoint-${STEPS} \
   --config_name bert-base-uncased \
   --train_file data/parsed/train/esnli_sents_highlight_contradict.jsonl \

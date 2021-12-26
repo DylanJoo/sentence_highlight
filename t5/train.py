@@ -61,7 +61,7 @@ def main(args):
                       num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     # ****** 2  *****
-    TASK_NAME = task_type.replace("-", "_")
+    TASK_NAME = args.task_type.replace("-", "_")
     t5.data.TaskRegistry.remove(TASK_NAME)
     t5.data.TaskRegistry.add(
             TASK_NAME,

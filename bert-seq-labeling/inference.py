@@ -168,7 +168,7 @@ def main():
 
     ## Loading form json
     dataset = DatasetDict.from_json({
-        "dev": data_args.eval_file,
+        "dev": data_args.eval_file
         "test": data_args.test_file
     })
 
@@ -202,6 +202,7 @@ def main():
             model=model, 
             args=training_args,
             eval_dataset=dataset['dev'],
+            test_dataset=dataset['test'],
             data_collator=data_collator
     )
     
@@ -209,7 +210,7 @@ def main():
     # on dev set
     if training_args.do_eval:
         results = trainer.inference(
-                output_jsonl=training_args.result_json.replace('split', 'dev'),
+                output_jsonl='dev'+training_args.result_json,
                 eval_dataset=None, # use the old one
                 test_dataset=None, # use the old one
                 prob_aggregate_strategy='first',
@@ -219,7 +220,7 @@ def main():
     # on test set
     if training_args.do_test:
         results = trainer.inference(
-                output_jsonl=training_args.result_json.replace('split', 'test'),
+                output_jsonl=training_args.result_json,
                 eval_dataset=None, # use the old one
                 test_dataset=None, # use the old one
                 prob_aggregate_strategy='first',

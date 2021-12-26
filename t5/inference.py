@@ -65,7 +65,7 @@ def main(args):
         temperature=0
     )
 
-    os.system(f'gsutil cp {args.output_file_gs}* {args.output_dir}')
+    os.system(f'gsutil cp {args.input_file_gs}* {args.output_dir}')
 
 
 if __name__ == '__main__':
@@ -76,6 +76,7 @@ if __name__ == '__main__':
     parser.add_argument("--base_dir", type=str, required=True)
     parser.add_argument("--task_type", type=str, default="marks-generation")
     parser.add_argument("--model_size", type=str, default="base")
+    parser.add_argument("--eval_batch_size", type=int, default=16)
     parser.add_argument("--infer_steps", type=int, default=-1)
     parser.add_argument("--beam_size", type=int, default=1)
     args = parser.parse_args()

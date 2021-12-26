@@ -7,6 +7,24 @@ def readlines(filename):
     data = list(map(lambda x: x.strip(), f))
     return data
 
+def read_fin10K(path):
+    """ Function for reading the sentence A/B from parsed financial 10K report."""
+    data = collections.defaultdict(list)
+
+    with open(path, 'r') as f:
+        for i, line in enumerate(f):
+            partA, partB, scores = line.strip().split('|-|')
+            idA, sentA = partA.strip().split('\t')
+            idB, sentB = partB.strip().split('\t')
+            score_sparse, score_dense = list(map(float, scores.strip().split()))
+
+            data['idA'].append(idA)
+            data['sentA'].append(sentA)
+            data['idB'].append(idB)
+            data['sentB'].append(sentB)
+            data['scores'].append( (score_sparse, score_dense) )
+    return data
+
 def read_esnli(args):
     """ Function for reading the sentence A/B and highlight A/B with the corresponding labels """
 

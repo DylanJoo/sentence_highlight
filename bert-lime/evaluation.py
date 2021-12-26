@@ -22,7 +22,7 @@ def load_from_jsonl(file_path):
     return truth, sent
 
 # prediction text files
-def load_from_bert_lime(file_path, prob_threshold=0, topk=-1, topn=-1):
+def load_from_bert_lime(file_path, class_idx=0, prob_threshold=0, topk=None):
     """
     File type: dictionary file, e.g. .json, .jsonl
     """
@@ -41,7 +41,6 @@ def load_from_bert_lime(file_path, prob_threshold=0, topk=-1, topn=-1):
 
             pred[i] = [w for (w, p) in sorted(pred_per_example, key=lambda x: x[1])][:topk]
     return pred
-    pass
 
 def load_from_bert_seq_labeling(file_path, prob_threshold=0, sentA=True):
     """
@@ -82,29 +81,12 @@ def load_from_t5_mark_generation(file_path, show_negative=0):
             for tok in nlp(line.strip()):
                 if tok.text == "*":
                     hl = 0 if hl else 1
-                elif punc(tok.text) is False:
+                elif show_negative:
+                    # pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
+                    pred[i] += [tok.text] if hl else []
+                else:
                     # pred[i] += [(tok.text, 1)] if hl else []
                     pred[i] += [tok.text] if hl else []
-                    if show_negative:
-                        # pred[i] += [(tok.text, 1)] if hl else [(tok.text, 0)]
-                        pred[i] += [tok.text] if hl else []
-    return pred
-
-def load_from_t5_token_extraction(file_path, show_negative=0):
-    """
-    File type: Raw text, e.g. .txt, .tsv
-    """
-    pred = collections.defaultdict(list)
-    punc = (lambda x: x in [",", ".", "?", "!"])
-
-    with open(file_path, 'r') as f:
-        for i, line in enumerate(f):
-            pred[i] = []
-
-            for j, w in enumerate(line.split("|||")):
-                w = w.strip()
-                pred[i] += [w] if punc(w) is False else []
-
     return pred
 
 
@@ -112,10 +94,10 @@ def main(args):
     truth, strings = load_from_jsonl(args.path_truth_file)
     if args.output_type == 'bert-lime':
         pred = load_from_bert_lime(
-                args.path_pred_file, 
-                class_idx=0, 
-                prob_threshold=0, 
-                topk=None
+                args.path_pred_file,
+                class_idx=0,
+                prob_threshold=0,
+                topk=-1
         )
     elif args.output_type == 'bert-seq-labeling':
         pred = load_from_bert_seq_labeling(
@@ -132,15 +114,11 @@ def main(args):
                 args.path_pred_file,
                 show_negative=0
         )
-    elif args.output_type == 't5-token-extraction':
-        pred = load_from_t5_token_extraction(
-                args.path_pred_file,
-        )
     else:
         print("Invalid type of highlight tasks")
         exit(0)
 
-    assert len(truth) == len(pred), "Inconsisent sizes of truth and predictions"
+    assert len(truth) != len(pred), "Inconsisent sizes of truth and predictions"
     metrics = collections.defaultdict(list)
 
     for j, (truth_tokens, pred_tokens) in enumerate(zip(truth.values(), pred.values())):
@@ -185,3 +163,7 @@ if __name__ == "__main__":
     nlp = English()
 
     main(args)
+
+
+
+

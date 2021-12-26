@@ -5,7 +5,6 @@ from transformers import Trainer
 import time
 import json
 import collections
-import multiprocessing
 
 class BertTrainer(Trainer):
 
@@ -81,7 +80,7 @@ class BertTrainer(Trainer):
                     [(w, p, l) for w, p, l in zip(
                         predictions['word'], predictions['prob'], predictions['label']
                     )]
-                ))
+                )
 
         return output_dict
 
