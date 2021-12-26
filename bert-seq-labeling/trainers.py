@@ -5,13 +5,13 @@ from transformers import Trainer
 import time
 import json
 import collections
+import multiprocessing
 
 class BertTrainer(Trainer):
 
     def inference(self,
                   output_jsonl='results.jsonl',
                   eval_dataset=None, 
-                  test_dataset=None, 
                   prob_aggregate_strategy='first',
                   save_to_json=True):
 
@@ -46,7 +46,7 @@ class BertTrainer(Trainer):
             label = output['active_predictions'].cpu().tolist()
 
             # per example in batch
-            for n in range(self.args.eval_batch_size):
+            for n in range(len(label)):
                 i_example = b * self.args.eval_batch_size + n
                 predictions = collections.defaultdict(list)
                 predictions['word'] += words[i_example]
@@ -80,7 +80,7 @@ class BertTrainer(Trainer):
                     [(w, p, l) for w, p, l in zip(
                         predictions['word'], predictions['prob'], predictions['label']
                     )]
-                )
+                ))
 
         return output_dict
 

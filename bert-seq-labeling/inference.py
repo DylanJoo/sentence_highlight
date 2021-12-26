@@ -202,7 +202,6 @@ def main():
             model=model, 
             args=training_args,
             eval_dataset=dataset['dev'],
-            test_dataset=dataset['test'],
             data_collator=data_collator
     )
     
@@ -212,7 +211,6 @@ def main():
         results = trainer.inference(
                 output_jsonl='dev'+training_args.result_json,
                 eval_dataset=None, # use the old one
-                test_dataset=None, # use the old one
                 prob_aggregate_strategy='first',
                 save_to_json=True
         )
@@ -221,8 +219,7 @@ def main():
     if training_args.do_test:
         results = trainer.inference(
                 output_jsonl=training_args.result_json,
-                eval_dataset=None, # use the old one
-                test_dataset=None, # use the old one
+                eval_dataset=dataset['test'],
                 prob_aggregate_strategy='first',
                 save_to_json=True
         )
