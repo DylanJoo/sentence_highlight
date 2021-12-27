@@ -65,7 +65,7 @@ def main(args):
         temperature=0
     )
 
-    os.system(f'gsutil cp {args.input_file_gs}* {args.output_dir}')
+    os.system(f'gsutil cp {args.input_file_gs}*- {args.output_file}')
 
 
 if __name__ == '__main__':

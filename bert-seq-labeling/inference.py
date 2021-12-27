@@ -72,7 +72,7 @@ class OurDataArguments:
 class OurTrainingArguments(TrainingArguments):
     output_dir: str = field(default='./models')
     do_train: bool = field(default=False)
-    do_eval: bool = field(default=True)
+    do_eval: bool = field(default=False)
     do_test: bool = field(default=False)
     save_steps: int = field(default=1000)
     per_device_train_batch_size: int = field(default=16)
@@ -168,7 +168,7 @@ def main():
 
     ## Loading form json
     dataset = DatasetDict.from_json({
-        "dev": data_args.eval_file
+        "dev": data_args.eval_file,
         "test": data_args.test_file
     })
 
@@ -209,7 +209,7 @@ def main():
     # on dev set
     if training_args.do_eval:
         results = trainer.inference(
-                output_jsonl='dev'+training_args.result_json,
+                output_jsonl=training_args.result_json.replace('split', 'dev'),
                 eval_dataset=None, # use the old one
                 prob_aggregate_strategy='first',
                 save_to_json=True
@@ -218,7 +218,7 @@ def main():
     # on test set
     if training_args.do_test:
         results = trainer.inference(
-                output_jsonl=training_args.result_json,
+                output_jsonl=training_args.result_json.replace('split', 'test'),
                 eval_dataset=dataset['test'],
                 prob_aggregate_strategy='first',
                 save_to_json=True

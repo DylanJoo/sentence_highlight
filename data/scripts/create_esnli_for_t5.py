@@ -13,6 +13,7 @@ parser.add_argument("-class", "--class_selected", default="all", type=str)
 parser.add_argument("--reverse", action="store_true", default=False)
 args = parser.parse_args()
 
+# [TODO] Prepare the predcition-specific type of codes.
 def extract_marked_token(sentence): 
     sentence = sentence.strip()
     token_list = []
