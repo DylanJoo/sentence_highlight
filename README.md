@@ -33,7 +33,7 @@ bash run_create_highlight_list.sh
 - Training
 > Huggingface's Bert implementaion with PyTorch frameworks. \
 ```
-python3 train.py \
+python3 bert-seq-labeling/train.py \
   --model_name_or_path bert-base-uncased \
   --config_name bert-base-uncased \
   --output_dir ./models/bert-base-uncased \
@@ -45,14 +45,15 @@ python3 train.py \
 ```
 - Inferencing
 ```
-python3 inference.py \
+python3 bert-seq-labeling/inference.py \
   --model_name_or_path "{Huggingface's CKPT}" \
   --config_name bert-base-uncased \
   --output_dir ./models/bert-base-uncased \
-  --train_file "data/parsed/train/esnli_sents_highlight_contradict.jsonl" \
   --eval_file "data/parsed/dev/esnli_sents_highlight_contradict.jsonl" \
+  --test_file "data/parsed/test/esnli_sents_highlight_contradict.jsonl" \
   --max_seq_length 128 \
-  --do_eval 
+  --do_eval \
+  --do_test 
 ```
 - Evaluation
 ```
@@ -83,7 +84,7 @@ T5-token-extraction   | 0.839 | 0.696 | 0.710
 Methods  | Mean Precision | Mean Recall | Mean F1-score
 :------- |:--------------:|:--------------:|:-------------:
 Bert-LIME             | -     | -     | -
-Bert-seq-labeling(.5) | 0.000 | 0.000 | 0.000
+Bert-seq-labeling(.5) | 0.853 | 0.734 | 0.744
 Bert-span-detection   | -     | -     | -    
 T5-marks-generation   | 0.856 | 0.644 | 0.691
 T5-token-extraction   | 0.845 | 0.703 | 0.718

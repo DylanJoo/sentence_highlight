@@ -1,0 +1,12 @@
+python3 estimate.py \
+  --output_dir test \
+  --model_name_or_path 'textattack/bert-base-uncased-snli' \
+  --tokenizer_name 'bert-base-uncased' \
+  --test_file 'data/parsed/dev/esnli_sents_highlight_contradict.jsonl' \
+  --pairwise \
+  --max_seq_length 128 \
+  --do_eval \
+  --n_perturb 10  \
+  --n_nonzero 5  \
+  --result_file 'results/esnli/bert-lime-dev-top5.jsonl' \
+  --feature_selection 'highest_weight' 
