@@ -1,11 +1,6 @@
 import os
+import json
 import collections
-
-
-def readlines(filename):
-    f = open(filename, 'r').readlines()
-    data = list(map(lambda x: x.strip(), f))
-    return data
 
 def read_fin10K(path):
     """ Function for reading the sentence A/B from parsed financial 10K report."""
@@ -25,28 +20,28 @@ def read_fin10K(path):
             data['scores'].append( (score_sparse, score_dense) )
     return data
 
-def read_esnli(args):
+def read_esnli(data_dir, split, class_selected, reverse):
     """ Function for reading the sentence A/B and highlight A/B with the corresponding labels """
+    data = collections.defaultdict(list)
 
-    data = collections.OrderedDict()
-    data['sentA'] = readlines(os.path.join(args.path_data_dir, 'sentenceA.txt'))
-    data['sentB'] = readlines(os.path.join(args.path_data_dir, 'sentenceB.txt'))
-    data['highlightA'] = readlines(os.path.join(args.path_data_dir, 'highlightA.txt'))
-    data['highlightB'] = readlines(os.path.join(args.path_data_dir, 'highlightB.txt'))
-    data['label'] = readlines(os.path.join(args.path_data_dir, 'label.txt'))
-
-    if os.path.exists(os.path.join(args.path_data_dir, 'explanation.txt')):
-        data['explanation'] = readlines(os.path.join(args.path_data_dir, 'explanation.txt'))
+    with open(os.path.join(data_dir, f'esnli-{split}.jsonl'), 'r') as f:
+        for i, item_dict in enumerate(f):
+            items = json.loads(item_dict.strip())
+            data['sentA'].append(items['Sentence1'])
+            data['sentB'].append(items['Sentence2'])
+            data['highlightA'].append(items['Marked1'])
+            data['highlightB'].append(items['Marked2'])
+            data['label'].append(items['label'])
 
     # example filtering 
-    if args.class_selected != 'all':
-        data['sentA'] = [h for (h, l) in zip(data['sentA'], data['label']) if l in args.class_selected]
-        data['sentB'] = [h for (h, l) in zip(data['sentB'], data['label']) if l in args.class_selected]
-        data['highlightA'] = [h for (h, l) in zip(data['highlightA'], data['label']) if l in args.class_selected]
-        data['highlightB'] = [h for (h, l) in zip(data['highlightB'], data['label']) if l in args.class_selected]
-        data['label'] = [l for l in data['label'] if l in args.class_selected]
+    if class_selected != 'all':
+        data['sentA'] = [h for (h, l) in zip(data['sentA'], data['label']) if l in class_selected]
+        data['sentB'] = [h for (h, l) in zip(data['sentB'], data['label']) if l in class_selected]
+        data['highlightA'] = [h for (h, l) in zip(data['highlightA'], data['label']) if l in class_selected]
+        data['highlightB'] = [h for (h, l) in zip(data['highlightB'], data['label']) if l in class_selected]
+        data['label'] = [l for l in data['label'] if l in class_selected]
 
-    if args.reverse:
+    if reverse:
         data['sentA'] = data['sentA'] + data['sentB']
         data['sentB'] = data['sentB'] + data['sentA']
         data['highlightA'] = data['highligthA'] + data['hightlightB']

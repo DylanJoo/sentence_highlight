@@ -9,10 +9,11 @@ from utils import read_esnli
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-data_dir", "--path_data_dir", type=str)
+parser.add_argument("-split", "--split", type=str)
 parser.add_argument("-output_path", "--path_output_file", type=str)
 parser.add_argument("-highlightB_only", "--labeling_on_sentB_only", action='store_true', default=False)
 parser.add_argument("-class", "--class_selected", type=str, default='contradiction')
-parser.add_argument("--reverse", action='store_true', default=False)
+parser.add_argument("-reverse", "--reverse", action='store_true', default=False)
 args = parser.parse_args()
 
 nlp = English()
@@ -66,12 +67,14 @@ def keyword_extraction(srcA, srcB, tgtA, tgtB, only_on_B=True):
 def convert_to_tokens_labeling(args):
 
     # read 5 parsed text esnli files
-    data = read_esnli(args)
+    data = read_esnli(args.path_data_dir, args.split, args.class_selected, args.reverse)
 
     with open(args.path_output_file, 'w') as f:
-        for sa, sb, hla, hlb in zip(data['sentA'], data['sentB'], data['highlightA'], data['highlightB']):
-            example = keyword_extraction(sa, sb, hla, hlb, args.labeling_on_sentB_only)
-            f.write(json.dumps(example) + '\n')
+        for sa, sb, hla, hlb in zip(data['sentA'], data['sentB'], 
+                                    data['highlightA'], data['highlightB']):
+            if hla and hlb:
+                example = keyword_extraction(sa, sb, hla, hlb, args.labeling_on_sentB_only)
+                f.write(json.dumps(example) + '\n')
 
 convert_to_tokens_labeling(args)
-print('DONE')
+print('Done')
