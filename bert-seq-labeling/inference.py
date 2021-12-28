@@ -167,26 +167,34 @@ def main():
         return features
 
     ## Loading form json
-    dataset = DatasetDict.from_json({
-        "dev": data_args.eval_file,
-        "test": data_args.test_file
-    })
-
     ## Preprocessing: training dataset
-    dataset['dev'] = dataset['dev'].map(
-        function=preprare_esnli_seq_labeling,
-        batched=True,
-        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
-        num_proc=multiprocessing.cpu_count()
-    )
-    
-    ## Preprocessing: dev dataset (preseve the words and word_ids)
-    dataset['test'] = dataset['test'].map(
-        function=preprare_esnli_seq_labeling,
-        batched=True,
-        remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
-        num_proc=multiprocessing.cpu_count()
-    )
+    if training_args.do_test:
+        dataset = DatasetDict.from_json({
+            "dev": data_args.eval_file,
+            "test": data_args.test_file
+        })
+
+        dataset['dev'] = dataset['dev'].map(
+            function=preprare_esnli_seq_labeling,
+            batched=True,
+            remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
+            num_proc=multiprocessing.cpu_count()
+        )
+        dataset['test'] = dataset['test'].map(
+            function=preprare_esnli_seq_labeling,
+            batched=True,
+            remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
+            num_proc=multiprocessing.cpu_count()
+        )
+    else:
+        dataset = DatasetDict.from_json({"dev": data_args.eval_file})
+        dataset['dev'] = dataset['dev'].map(
+            function=preprare_esnli_seq_labeling,
+            batched=True,
+            remove_columns=['sentA', 'sentB', 'keywordsA', 'keywordsB', 'labels'],
+            num_proc=multiprocessing.cpu_count()
+        )
+
 
 
     # Dataset

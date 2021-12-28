@@ -11,65 +11,12 @@ In addition, take the classic explanation model "LIME" with bert-base model as t
 <hr/>
 
 **Repositary Updates**
-- [2021/12/08]: See the quick experiments (prototype) on [colab notebook](https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing)
-- [2021/12/15]: The latest evaluation results of bert-seq-labeling (10000 steps): 
-
-## Bert-LIME
-<hr/>
-
-## T5-marks-generation
-<hr/>
-
-## Bert-seq-labeling
-- Highlight dataset
-> a) Download the files from 'OanaMariaCamburu/e-SNLI'\
-> b) Parsing the csv file into text file\
-> c) Preprocessing into the bert-token classfication task.
-```
-bash download_esnli.sh
-bash run_parse.sh
-bash run_create_highlight_list.sh
-```
-- Training
-> Huggingface's Bert implementaion with PyTorch frameworks. \
-```
-python3 bert-seq-labeling/train.py \
-  --model_name_or_path bert-base-uncased \
-  --config_name bert-base-uncased \
-  --output_dir ./models/bert-base-uncased \
-  --max_steps 1000 \
-   --train_file "data/parsed/train/esnli_sents_highligh_contradict.jsonl" \
-  --eval_file "data/parsed/dev/esnli_sents_highligh_contradict.jsonl"
-  --max_seq_length 128 \
-  --do_train \
-```
-- Inferencing
-```
-python3 bert-seq-labeling/inference.py \
-  --model_name_or_path "{Huggingface's CKPT}" \
-  --config_name bert-base-uncased \
-  --output_dir ./models/bert-base-uncased \
-  --eval_file "data/parsed/dev/esnli_sents_highlight_contradict.jsonl" \
-  --test_file "data/parsed/test/esnli_sents_highlight_contradict.jsonl" \
-  --max_seq_length 128 \
-  --do_eval \
-  --do_test 
-```
-- Evaluation
-```
-# Evaluate bert-seq-labeling on esnli
-python3 evaluation.py \
-    -truth 'data/parsed/dev/esnli_sents_highlight_contradict.jsonl' \
-    -pred 'results/esnli/bert-seq-labeling-dev.jsonl' \
-    -hl_type 'bert-seq-labeling'
-
-# Evalute t5-marks-generation
-python3 evaluation.py \
-    -truth 'data/parsed/dev/esnli_sents_highlight_contradict.jsonl' \
-    -pred 'results/esnli/t5-marks-generation-dev.txt' \
-    -hl_type 't5-marks-generation'
-```
-- Results 
+- [2021/12/08]: See the experiments on notebooks
+> bert-seq-labeling: [colab notebook](https://colab.research.google.com/drive/14DxpHoSV7hL1YgrPPdVNIbp1aHeSKHgc?usp=sharing)
+- [2021/12/17]: See the experiments on notebooks
+> t5-marks-generation and t5-token-extraction: [colab notebook](https://colab.research.google.com/drive/1bQfOsrgu6lkgdro8SiLv2GD_hkeoHz0Q?usp=sharing)
+- [2021/12/28]: Preprocessing pipeline updates and integrate the "infernecing" features on corpus from other domains.
+- [2021/12/28]: Results updates as follow.
 
 **E-snli Dev set (#examples 3278)**
 Methods  | Mean Precision | Mean Recall | Mean F1-score
@@ -80,7 +27,7 @@ Bert-span-detection   | -     | -     | -
 T5-marks-generation   | 0.847 | 0.626 | 0.676
 T5-token-extraction   | 0.839 | 0.696 | 0.710
 
-**E-snli Dev set (#examples 3237)**
+**E-snli Test set (#examples 3237)**
 Methods  | Mean Precision | Mean Recall | Mean F1-score
 :------- |:--------------:|:--------------:|:-------------:
 Bert-LIME             | -     | -     | -
@@ -89,18 +36,100 @@ Bert-span-detection   | -     | -     | -
 T5-marks-generation   | 0.856 | 0.644 | 0.691
 T5-token-extraction   | 0.845 | 0.703 | 0.718
 
+<hr/>
+## Unsupervised Learning - Bert-LIME Esimtation
+- TBA
+
+<hr/>
+## Supervised Learning
+- E-snli dataset file downlaoding and parsing
+> Download the files from 'OanaMariaCamburu/e-SNLI'
 ```
-Examples: \
- Ground truth tokens: ['men', 'fighting']              
- Highlighted tokens: ['men', 'fighting'] \
- Ground truth tokens: ['jackets', 'walk', 'to', 'school']               
- Highlighted tokens: ['jackets']
-********************************            
-Mean precision: 1.0              
-Mean recall   : 0.625            
-Mean f1-score : 0.7              
-Num of evaluated samples: 2            
-********************************
+cd data
+bash scripts/download_esnli.sh
+bash run_parse.sh
+```
+- Preparing E-snli dataset into the corresponding models and tasks
+> (1) bert-seq-labeling
+```
+cd data
+bash run_create_bert_data.sh 'train'
+bash run_create_bert_data.sh 'dev'
+bash run_create_bert_data.sh 'test'
+```
+> (2) t5-marks-generation
+> (3) t5-token-extraction
+```
+cd data
+bash run_create_t5_data.sh 'train'
+bash run_create_t5_data.sh 'dev'
+bash run_create_t5_data.sh 'test'
+```
+
+### Bert-seq-labeling
+- Training
+> Huggingface's Bert implementaion with PyTorch frameworks. Besides, I recommend using the [Weights & Biases](https://wandb.ai/) as the visualization tools, and connect them into the training process!
+```
+python3 bert-seq-labeling/train.py \
+  --model_name_or_path 'bert-base-uncased' \
+  --output_dir checkpoints/bert-base-uncased \
+  --config_name 'bert-base-uncased' \
+  --train_file data/esnli.train.sent_highlight.contradiction.jsonl \
+  --eval_file data/esnli.dev.sent_highlight.contradiction.jsonl \
+  --max_steps 10000 \
+  --save_steps 1000 \
+  --eval_steps 2000 \
+  --evaluation_strategy 'steps'\
+  --eval_steps 2000 \
+  --max_seq_length 128 \
+  --evaluate_during_training \
+  --do_train \
+  --do_eval
+```
+> You now can find out the checkpoint in the 'checkpoints' folder or you can download our [finetuned checkpoints](#)
+
+- Inferencing
+```
+STEPS=10000
+python3 bert-seq-labeling/inference.py \
+  --model_name_or_path checkpoints/bert-base-uncased/checkpoint-${STEPS} \
+  --output_dir checkpoints/bert-base-uncased \
+  --config_name bert-base-uncased \
+  --eval_file data/esnli.dev.sent_highlight.contradiction.jsonl \
+  --test_file data/esnli.test.sent_highlight.contradiction.jsonl \
+  --result_json results/bert-seq-labeling-split.jsonl \
+  --max_steps 10 \
+  --max_seq_length 128 \
+  --do_eval \
+  --do_test
+```
+> You now can find out the esnli dev/test results in results/esnli.
+
+- Evaluation 
+```
+# dev set
+python3 evaluation.py \
+    -truth 'data/esnli.dev.sent_highlight_contradiction.jsonl' \
+    -pred 'results/esnli/bert-seq-labeling-dev.jsonl' \
+    -hl_type 'bert-seq-labeling'
+
+# test set 
+python3 evaluation.py \
+    -truth 'data/esnli.dev.sent_highlight_contradiction.jsonl' \
+    -pred 'results/esnli/bert-seq-labeling-dev.jsonl' \
+    -hl_type 'bert-seq-labeling'
+```
+
+### T5-marks-generation
+### T5-token-extraction
+
+- Evaluation
+```
+# Evalute t5-marks-generation
+python3 evaluation.py \
+    -truth 'data/parsed/dev/esnli_sents_highlight_contradict.jsonl' \
+    -pred 'results/esnli/t5-marks-generation-dev.txt' \
+    -hl_type 't5-marks-generation'
 ```
 
 ## T5-marks-generation

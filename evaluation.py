@@ -162,8 +162,7 @@ def main(args):
         if j % 10000 == 0:
             print(f"Sentence pair: {strings[j]}\
                     \n - Ground truth tokens: {truth_tokens}\
-                    \n - H -l
-                    ghlighted tokens: {pred_tokens}")
+                    \n - Highlighted tokens: {pred_tokens}")
 
     print("********************************\
             \nMean {:<9}: {:<5}\

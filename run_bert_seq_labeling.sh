@@ -1,11 +1,10 @@
 # Finetunning for sentence highlight task with bert-token-labeling model 
-# [TODO] Change the arugmnet of model name to self defined model, but the default tokenizer and configs
 python3 bert-seq-labeling/train.py \
-  --model_name_or_path checkpoints/bert-base-uncased \
-  --output_dir ./models/bert-base-uncased/train \
-  --config_name bert-base-uncased \
-  --train_file data/parsed/train/esnli_sents_highlight_contradict.jsonl \
-  --eval_file data/parsed/dev/esnli_sents_highlight_contradict.jsonl \
+  --model_name_or_path 'bert-base-uncased' \
+  --output_dir checkpoints/bert-base-uncased \
+  --config_name 'bert-base-uncased' \
+  --train_file data/esnli.train.sent_highlight.contradiction.jsonl \
+  --eval_file data/esnli.dev.sent_highlight.contradiction.jsonl \
   --max_steps 10000 \
   --save_steps 1000 \
   --eval_steps 2000 \
@@ -16,12 +15,15 @@ python3 bert-seq-labeling/train.py \
   --do_train \
   --do_eval
 
+STEPS=10000
 python3 bert-seq-labeling/inference.py \
   --model_name_or_path checkpoints/bert-base-uncased/checkpoint-${STEPS} \
+  --output_dir checkpoints/bert-base-uncased \
   --config_name bert-base-uncased \
-  --train_file data/parsed/train/esnli_sents_highlight_contradict.jsonl \
-  --eval_file data/parsed/dev/esnli_sents_highlight_contradict.jsonl \
-  --output_dir ./models/bert-base-uncased \
+  --eval_file data/esnli.dev.sent_highlight.contradiction.jsonl \
+  --test_file data/esnli.test.sent_highlight.contradiction.jsonl \
+  --result_json results/esnli/bert-seq-labeling-split.jsonl \
   --max_steps 10 \
   --max_seq_length 128 \
-  --do_eval
+  --do_eval \
+  --do_test

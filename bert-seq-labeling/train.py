@@ -86,7 +86,6 @@ class OurTrainingArguments(TrainingArguments):
     logging_dir: Optional[str] = field(default='./logs')
     warmup_steps: int = field(default=1000)
     resume_from_checkpiint: Optional[str] = field(default=None)
-    overwrite_cache: bool = field(default=False)
 
 
 def main():
