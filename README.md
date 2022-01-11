@@ -37,10 +37,12 @@ T5-marks-generation   | 0.856 | 0.644 | 0.691
 T5-token-extraction   | 0.845 | 0.703 | 0.718
 
 <hr/>
+
 ## Unsupervised Learning - Bert-LIME Esimtation
 - TBA
 
 <hr/>
+
 ## Supervised Learning
 - E-snli dataset file downlaoding and parsing
 > Download the files from 'OanaMariaCamburu/e-SNLI'
@@ -51,6 +53,7 @@ bash run_parse.sh
 ```
 - Preparing E-snli dataset into the corresponding models and tasks
 > (1) bert-seq-labeling
+
 ```
 cd data
 bash run_create_bert_data.sh 'train'
@@ -59,6 +62,7 @@ bash run_create_bert_data.sh 'test'
 ```
 > (2) t5-marks-generation
 > (3) t5-token-extraction
+
 ```
 cd data
 bash run_create_t5_data.sh 'train'
