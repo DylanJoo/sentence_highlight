@@ -81,7 +81,7 @@ class OurTrainingArguments(TrainingArguments):
     logging_dir: Optional[str] = field(default='./logs')
     warmup_steps: int = field(default=1000)
     resume_from_checkpiint: Optional[str] = field(default=None)
-    result_json: Optional[str] = field(default='/results')
+    result_json: Optional[str] = field(default='results/')
 
 def main():
     """
