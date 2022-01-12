@@ -37,6 +37,36 @@ T5-marks-generation   | 0.856 | 0.644 | 0.691
 T5-token-extraction   | 0.845 | 0.703 | 0.718
 
 <hr/>
+## Inferencing 
+
+### Bert-seq-labeling on fin10K
+```
+STEPS=10000
+mkdir results/fin10k
+
+for FILE_PATH in ./data/fin10k/*.jsonl
+do
+    echo "============================"
+    echo "Start $FILE_PATH Highlighting"
+    echo "============================"
+    FILE=${FILE_PATH##*/}
+    filecode=${FILE/.jsonl/""}
+
+    python3 bert-seq-labeling/inference.py \
+      --model_name_or_path checkpoints/bert-base-uncased/checkpoint-${STEPS} \
+      --output_dir checkpoints/bert-base-uncased \
+      --config_name bert-base-uncased \
+      --eval_file $FILE_PATH \
+      --result_json results/fin10k/bert-seq-labeling.${filecode}.highlights.jsonl \
+      --max_seq_length 128 \
+      --do_eval
+
+    echo "============================"
+    echo "Highlighting Completed"
+    echo "RESULTS: results/fin10k/bert-seq-labeling.${filecode}.highlights.jsonl"
+    echo "============================"
+done
+```
 
 ## Unsupervised Learning - Bert-LIME Esimtation
 - TBA
@@ -44,6 +74,8 @@ T5-token-extraction   | 0.845 | 0.703 | 0.718
 <hr/>
 
 ## Supervised Learning
+
+### E-snli data
 - E-snli dataset file downlaoding and parsing
 > Download the files from 'OanaMariaCamburu/e-SNLI'
 ```
@@ -136,7 +168,3 @@ python3 evaluation.py \
     -hl_type 't5-marks-generation'
 ```
 
-## T5-marks-generation
-- Highlight dataset
-- Training
-- Evaluation
